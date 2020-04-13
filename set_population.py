@@ -43,7 +43,7 @@ def translate(ja_sheet_name):
                     return f'{ward_en}_{gender_en}'  # using f-strings
 
 
-def format_df(df):
+def format_df(df, sheet_name):
     '''Remove redundant rows / columns, and format header'''
 
     # Drop the columns of redundant data
@@ -81,26 +81,30 @@ def format_df(df):
             aza_indices.append(i-1)
             i -= 1
 
+    # Add columns for city ward & gender
+    ward, gender = sheet_name.split("_")  # e.g. taihaku_m
+    df.insert(0, "gender", gender)  # e.g. m
+    df.insert(0, "ward", ward)  # e.g. taihaku
+
     # Drop those "aza" rows
     return df.drop(aza_indices)
 
 
-def parse_xlsx(csv_dir=None):
+def generate_csv():
     '''Parse Excel file of population-age distribution
 
-    :param csv_dir: Relative path of the directory where CSV is to be output
-        (optional. Specify only if you want the result as CSVs)
-    :return: dictionary of dataframes
+    :return: string, relative path to the generated CSV
     '''
     start = time.time()
-    xlsx_path = "./raw/age_each_r0204.xlsx"
+    xlsx_path = os.path.join(".", "raw", "age_each_r0204.xlsx")  # input
+    csv_path = os.path.join(".", "csv", "age_structure.csv")  # output
 
     # Seemingly reading Excel file takes quite a time
     sheet_names = get_sheet_names(xlsx_path)
     print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
 
-    # Array of Pandas dataframes
-    dfs = {}
+    # List of Pandas dataframes
+    dfs = []
 
     for sheet_name_ja, sheet_name_en in sheet_names.items():
         print("Processing the Excel sheet '", sheet_name_ja,
@@ -108,34 +112,21 @@ def parse_xlsx(csv_dir=None):
 
         # Note: the "-" symbol is implicitly converted into value 0 here
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
-        df = format_df(df)
-        dfs[sheet_name_en] = df
+        df = format_df(df, sheet_name_en)
+        dfs.append(df)
 
-    if (csv_dir is not None):
-        # Sample header of a dataframe
-        first_df_name = list(dfs.keys())[0]
+    # Merge dataframes of every ward / gender
+    all_wards_df = pd.concat(dfs, ignore_index=True)
 
-        header = list(dfs[first_df_name].columns.values)
-        header = ["ward", "gender"] + header
+    all_wards_df.to_csv(csv_path,
+                        mode="w",
+                        index=True,
+                        header=True)
 
-        merged_df = pd.DataFrame(columns=header)
-        for df_name, df in dfs.items():
-            ward, gender = df_name.split("_")  # e.g. taihaku_m
-            df.insert(0, "gender", gender)  # e.g. m
-            df.insert(0, "ward", ward)  # e.g. taihaku
-            merged_df = pd.concat([merged_df, df], ignore_index=True)
-
-        merged_df.to_csv(os.path.join(".", csv_dir, "age_structure.csv"),
-                         mode="w",
-                         index=True,
-                         header=True)
-
-    print("Completed! Total time elapsed:", time.time() - start)
-
-    return dfs
+    print("CSV generated. Total time elapsed:", time.time() - start)
+    return csv_path
 
 
 # Debug purpose
 if __name__ == "__main__":
-    dfs = parse_xlsx("csv")
-    # print(dfs)
+    dfs = generate_csv()
