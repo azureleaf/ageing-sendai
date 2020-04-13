@@ -85,25 +85,44 @@ def format_df(df):
     return df.drop(aza_indices)
 
 
-if __name__ == "__main__":
+def parse_population_xlsx(xlsx_path, csv_dir=None):
+    '''Parse Excel file of population-age distribution
+
+    :param xlsx_path:
+    :param csv_dir: Directory of the CSV to be output
+        (optional. Specify only if you want the result as CSVs)
+    :return: dictionary of dataframes
+    '''
     start = time.time()
-    xlsx_path = "./raw/age_each_r0204.xlsx"
 
     # Seemingly reading Excel file takes quite a time
     sheet_names = get_sheet_names(xlsx_path)
     print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
 
+    # Array of Pandas dataframes
+    dfs = {}
+
     for sheet_name_ja, sheet_name_en in sheet_names.items():
-        print("Starting to process the sheet:", sheet_name_ja)
+        print("Processing the Excel sheet '", sheet_name_ja,
+              "' Time elapsed:",  time.time() - start)
 
         # Note: the "-" symbol is implicitly converted into value 0 here
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
         df = format_df(df)
+        dfs[sheet_name_en] = df
 
-        df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
-                  mode="w",
-                  index=True,
-                  header=True)
+        if csv_dir is not None:
+            df.to_csv(os.path.join(".", csv_dir, sheet_name_en + ".csv"),
+                      mode="w",
+                      index=True,
+                      header=True)
 
-        print("CSV output for", sheet_name_ja,
-              ". Time elapsed:", time.time() - start)
+    print("Completed! Total time elapsed:", time.time() - start)
+    return dfs
+
+
+# Debug purpose
+if __name__ == "__main__":
+    xlsx_path = "./raw/age_each_r0204.xlsx"
+    dfs = parse_population_xlsx(xlsx_path, csv_dir=None)
+    print(dfs)
