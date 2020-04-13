@@ -34,22 +34,16 @@ def translate(ja_sheet_name):
         "女": "f"
     }
 
-    translation = ""
     for ward_ja, ward_en in wards.items():
         if(ja_sheet_name.find(ward_ja) != -1):
-            translation += ward_en
-            break
-    for gender_ja, gender_en in genders.items():
-        if(ja_sheet_name.find(gender_ja) != -1):
-            translation += "_" + gender_en
-            break
-    return translation
+            for gender_ja, gender_en in genders.items():
+                if(ja_sheet_name.find(gender_ja) != -1):
+                    return f'{ward_en}_{gender_en}'  # using f-strings
 
 
 if __name__ == "__main__":
     xlsx_path = "./raw/age_each_r0204.xlsx"
 
-    # sheet_names = get_sheet_names(xlsx_path)
+    sheet_names = get_sheet_names(xlsx_path)
     # for sheet_name in sheet_names:
     #     pd.read_excel(xlsx_path,)
-    print(translate("あああ太白区いaaaい男"))
