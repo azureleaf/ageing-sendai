@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import time
+import sys
 
 
 def get_sheet_names(uri):
@@ -21,7 +22,7 @@ def get_sheet_names(uri):
 
 
 def translate(ja_sheet_name):
-    '''Tranlate lengthy Japanese name into English abbreviations'''
+    '''Tranlate lengthy Japanese names into English abbreviations'''
     '''e.g. convert "太白区（女）" into "taihaku_f" '''
 
     wards = {
@@ -48,18 +49,23 @@ def format_df(df):
 
     # Drop the columns of redundant data
     df.drop([column_name for column_name in df.columns if
-             column_name.find("人口総数") != -1 or
-             column_name.find("再掲") != -1
+             column_name.find("人口総数") != -1
              ], axis=1, inplace=True)
 
     # Drop the last row of the redundant data (total population)
     df.drop([len(df.index) - 1], inplace=True)
 
-    # Format the column indices for accessibility
-    df.columns = df.columns.map(lambda x: x.replace('\n', ''))
-    df.columns = df.columns.map(lambda x: x.replace('歳', ''))
-    df.columns = df.columns.map(lambda x: x.replace('以上', '+'))
-    df.columns = df.columns.map(lambda x: x.replace('町　名', 'town_name'))
+    # Format the column names for better accessibility
+    replacements = {
+        '\n': '',
+        '歳': '',
+        '町　名': 'town_name',
+        '（再掲）': '',
+        '～': '-',
+        '以上': '+'
+    }
+    for before, after in replacements.items():
+        df.columns = df.columns.map(lambda x: x.replace(before, after))
 
     # Remove "字(aza)" rows,
     # because populations there are already counted in "大字(Oaza)"
@@ -67,7 +73,7 @@ def format_df(df):
     aza_indices = []  # indices of the rows to be dropped
     for i in oaza_df.index:
         oaza = df.loc[i]["town_name"].replace("（大字計）", "")
-        df.loc[i]["town_name"] = oaza  # Modify original df
+        df.loc[i, "town_name"] = oaza  # Modify original df
 
         # Trace the successive 字s which are included in this 大字
         # e.g. for oaza 茂庭, preceding rows are 茂庭字湯ノ沢, 茂庭字松倉... etc.
@@ -102,3 +108,5 @@ if __name__ == "__main__":
 
         print("CSV output for", sheet_name_ja,
               ". Time elapsed:", time.time() - start)
+
+        sys.exit()
