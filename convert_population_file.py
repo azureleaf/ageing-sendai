@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import time
+import sys
 
 
 def get_sheet_names(uri):
@@ -43,18 +44,46 @@ def translate(ja_sheet_name):
                     return f'{ward_en}_{gender_en}'  # using f-strings
 
 
+def format_df(df):
+    '''Remove redundant rows / columns, and format data'''
+
+    # Drop the columns of redundant data
+    df.drop([column_name for column_name in df.columns if
+             column_name.find("人口総数") != -1 or
+             column_name.find("再掲") != -1
+             ], axis=1, inplace=True)
+
+    # Drop the last row of the redundant data (total population)
+    df.drop([len(df.index) - 1], inplace=True)
+
+    # Format the column indices for accessibility
+    df.columns = df.columns.map(lambda x: x.replace('\n', ''))
+    df.columns = df.columns.map(lambda x: x.replace('歳', ''))
+    df.columns = df.columns.map(lambda x: x.replace('以上', '+'))
+    df.columns = df.columns.map(lambda x: x.replace('町　名', 'town_name'))
+
+    # Remove "字(aza)" rows because
+    # those numbers are already included in "大字(Oaza)" rows
+
+    print(df.head)
+    return df
+
+
 if __name__ == "__main__":
     start = time.time()
     xlsx_path = "./raw/age_each_r0204.xlsx"
 
+    # Seemingly reading Excel file takes quite a time
     sheet_names = get_sheet_names(xlsx_path)
     print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
 
     for sheet_name_ja, sheet_name_en in sheet_names.items():
+        # Note: seemingly, the "-" symbol is implicitly converted into value 0
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
 
-        # Remove the line break in a cell
-        df.columns = df.columns.map(lambda x: x.replace('\n', ' '))
+        df = format_df(df)
+
+        sys.exit()
 
         df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
                   mode="w",
