@@ -44,7 +44,7 @@ def translate(ja_sheet_name):
 
 
 def format_df(df):
-    '''Remove redundant rows / columns, and format headers'''
+    '''Remove redundant rows / columns, and format header'''
 
     # Drop the columns of redundant data
     df.drop([column_name for column_name in df.columns if
@@ -88,7 +88,7 @@ def format_df(df):
 def parse_xlsx(csv_dir=None):
     '''Parse Excel file of population-age distribution
 
-    :param csv_dir: Directory of the CSV to be output
+    :param csv_dir: Relative path of the directory where CSV is to be output
         (optional. Specify only if you want the result as CSVs)
     :return: dictionary of dataframes
     '''
@@ -111,17 +111,31 @@ def parse_xlsx(csv_dir=None):
         df = format_df(df)
         dfs[sheet_name_en] = df
 
-        if csv_dir is not None:
-            df.to_csv(os.path.join(".", csv_dir, sheet_name_en + ".csv"),
-                      mode="w",
-                      index=True,
-                      header=True)
+    if (csv_dir is not None):
+        # Sample header of a dataframe
+        first_df_name = list(dfs.keys())[0]
+
+        header = list(dfs[first_df_name].columns.values)
+        header = ["ward", "gender"] + header
+
+        merged_df = pd.DataFrame(columns=header)
+        for df_name, df in dfs.items():
+            ward, gender = df_name.split("_")  # e.g. taihaku_m
+            df.insert(0, "gender", gender)  # e.g. m
+            df.insert(0, "ward", ward)  # e.g. taihaku
+            merged_df = pd.concat([merged_df, df], ignore_index=True)
+
+        merged_df.to_csv(os.path.join(".", csv_dir, "age_structure.csv"),
+                         mode="w",
+                         index=True,
+                         header=True)
 
     print("Completed! Total time elapsed:", time.time() - start)
+
     return dfs
 
 
 # Debug purpose
 if __name__ == "__main__":
-    dfs = parse_xlsx()
-    print(dfs)
+    dfs = parse_xlsx("csv")
+    # print(dfs)
