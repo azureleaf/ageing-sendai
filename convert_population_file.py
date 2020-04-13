@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
+import os
+import time
 
 
 def get_sheet_names(uri):
@@ -42,8 +44,25 @@ def translate(ja_sheet_name):
 
 
 if __name__ == "__main__":
+    start = time.time()
     xlsx_path = "./raw/age_each_r0204.xlsx"
 
     sheet_names = get_sheet_names(xlsx_path)
-    # for sheet_name in sheet_names:
-    #     pd.read_excel(xlsx_path,)
+    print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
+
+    for sheet_name_ja, sheet_name_en in sheet_names.items():
+        df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
+
+        # Remove the line break in a cell
+        df.columns = df.columns.map(lambda x: x.replace('\n', ' '))
+
+        print("Dataframe generated for", sheet_name_en,
+              "Time elapsed:", time.time() - start)
+
+        df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
+                  mode="w",
+                  index=True,
+                  header=True)
+
+        print("CSV output for", sheet_name_en,
+              "Time elapsed:", time.time() - start)
