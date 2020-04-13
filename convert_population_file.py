@@ -2,7 +2,6 @@
 import pandas as pd
 import os
 import time
-import sys
 
 
 def get_sheet_names(uri):
@@ -108,5 +107,3 @@ if __name__ == "__main__":
 
         print("CSV output for", sheet_name_ja,
               ". Time elapsed:", time.time() - start)
-
-        sys.exit()
