@@ -9,20 +9,20 @@ def get_sheet_names(uri):
 
     xlsx = pd.ExcelFile(uri)
 
-    # We're not interested in some Excel sheets
-    # Drop the names of such sheets according to keywords
+    # We're not interested in some redundant Excel sheets
+    # Drop such sheets according to keywords from the sheet list
     key_sheet_names = [name for name in xlsx.sheet_names if
                        name.find("行政区別") == -1 and
                        name.find("合計") == -1]
 
     # Get the dict of sheetnames (JA as key, EN as value)
-    return {sheet_name: translate(sheet_name)
-            for sheet_name in key_sheet_names}
+    return {sheet_name_ja: translate(sheet_name_ja)
+            for sheet_name_ja in key_sheet_names}
 
 
 def translate(ja_sheet_name):
     '''Tranlate lengthy Japanese name into English abbreviations'''
-    '''e.g. 太白区（女） into taihaku_f '''
+    '''e.g. convert "太白区（女）" into "taihaku_f" '''
 
     wards = {
         "青葉": "aoba",
@@ -55,9 +55,6 @@ if __name__ == "__main__":
 
         # Remove the line break in a cell
         df.columns = df.columns.map(lambda x: x.replace('\n', ' '))
-
-        print("Dataframe generated for", sheet_name_en,
-              "Time elapsed:", time.time() - start)
 
         df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
                   mode="w",
