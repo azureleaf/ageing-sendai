@@ -2,7 +2,6 @@
 import pandas as pd
 import os
 import time
-# import sys
 
 
 def get_sheet_names(uri):
@@ -10,8 +9,8 @@ def get_sheet_names(uri):
 
     xlsx = pd.ExcelFile(uri)
 
-    # We're not interested in some redundant Excel sheets
-    # Drop such sheets according to keywords from the sheet list
+    # We're not interested in some Excel sheets with redundant data
+    # Drop such sheets which have certain keywords
     key_sheet_names = [name for name in xlsx.sheet_names if
                        name.find("行政区別") == -1 and
                        name.find("合計") == -1]
@@ -45,7 +44,7 @@ def translate(ja_sheet_name):
 
 
 def format_df(df):
-    '''Remove redundant rows / columns, and format data'''
+    '''Remove redundant rows / columns, and format headers'''
 
     # Drop the columns of redundant data
     df.drop([column_name for column_name in df.columns if
@@ -63,22 +62,21 @@ def format_df(df):
     df.columns = df.columns.map(lambda x: x.replace('町　名', 'town_name'))
 
     # Remove "字(aza)" rows,
-    # because those numbers are already included in "大字(Oaza)"
+    # because populations there are already counted in "大字(Oaza)"
     oaza_df = df[df['town_name'].str.contains("大字計")]
-    aza_indices = []  # List of the indices of the rows to be dropped
+    aza_indices = []  # indices of the rows to be dropped
     for i in oaza_df.index:
         oaza = df.loc[i]["town_name"].replace("（大字計）", "")
-        df.loc[i]["town_name"] = oaza  # Modify original df as well
+        df.loc[i]["town_name"] = oaza  # Modify original df
 
-        # Trace the successive 字s which are included in the 大字
+        # Trace the successive 字s which are included in this 大字
         # e.g. for oaza 茂庭, preceding rows are 茂庭字湯ノ沢, 茂庭字松倉... etc.
-        while df.loc[i-1]["town_name"].find(oaza + "字") == 0:
+        # Needs to abort the looping when it's the 1st row
+        while i >= 1 and df.loc[i-1]["town_name"].find(oaza + "字") == 0:
             aza_indices.append(i-1)
             i -= 1
-            if i <= 0:
-                break
 
-    # Drop the aza rows
+    # Drop those "aza" rows
     return df.drop(aza_indices)
 
 
@@ -91,11 +89,10 @@ if __name__ == "__main__":
     print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
 
     for sheet_name_ja, sheet_name_en in sheet_names.items():
-        print("Starting to process the sheet:", sheet_name_en)
+        print("Starting to process the sheet:", sheet_name_ja)
 
         # Note: the "-" symbol is implicitly converted into value 0 here
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
-
         df = format_df(df)
 
         df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
@@ -103,5 +100,5 @@ if __name__ == "__main__":
                   index=True,
                   header=True)
 
-        print("CSV output for", sheet_name_en,
-              "Time elapsed:", time.time() - start)
+        print("CSV output for", sheet_name_ja,
+              ". Time elapsed:", time.time() - start)
