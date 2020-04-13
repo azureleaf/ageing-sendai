@@ -2,7 +2,7 @@
 import pandas as pd
 import os
 import time
-import sys
+# import sys
 
 
 def get_sheet_names(uri):
@@ -16,7 +16,7 @@ def get_sheet_names(uri):
                        name.find("行政区別") == -1 and
                        name.find("合計") == -1]
 
-    # Get the dict of sheetnames (JA as key, EN as value)
+    # dict of sheetnames (JA name as key: EN name as value)
     return {sheet_name_ja: translate(sheet_name_ja)
             for sheet_name_ja in key_sheet_names}
 
@@ -62,11 +62,24 @@ def format_df(df):
     df.columns = df.columns.map(lambda x: x.replace('以上', '+'))
     df.columns = df.columns.map(lambda x: x.replace('町　名', 'town_name'))
 
-    # Remove "字(aza)" rows because
-    # those numbers are already included in "大字(Oaza)" rows
+    # Remove "字(aza)" rows,
+    # because those numbers are already included in "大字(Oaza)"
+    oaza_df = df[df['town_name'].str.contains("大字計")]
+    aza_indices = []  # List of the indices of the rows to be dropped
+    for i in oaza_df.index:
+        oaza = df.loc[i]["town_name"].replace("（大字計）", "")
+        df.loc[i]["town_name"] = oaza  # Modify original df as well
 
-    print(df.head)
-    return df
+        # Trace the successive 字s which are included in the 大字
+        # e.g. for oaza 茂庭, preceding rows are 茂庭字湯ノ沢, 茂庭字松倉... etc.
+        while df.loc[i-1]["town_name"].find(oaza + "字") == 0:
+            aza_indices.append(i-1)
+            i -= 1
+            if i <= 0:
+                break
+
+    # Drop the aza rows
+    return df.drop(aza_indices)
 
 
 if __name__ == "__main__":
@@ -78,12 +91,12 @@ if __name__ == "__main__":
     print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
 
     for sheet_name_ja, sheet_name_en in sheet_names.items():
-        # Note: seemingly, the "-" symbol is implicitly converted into value 0
+        print("Starting to process the sheet:", sheet_name_en)
+
+        # Note: the "-" symbol is implicitly converted into value 0 here
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
 
         df = format_df(df)
-
-        sys.exit()
 
         df.to_csv(os.path.join(".", "csv", sheet_name_en + ".csv"),
                   mode="w",
