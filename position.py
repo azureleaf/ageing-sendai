@@ -18,19 +18,17 @@ def get_pos_df(pos_csv_path):
     for before, after in replacements.items():
         df.columns = df.columns.map(lambda x: x.replace(before, after))
 
+    # Drop wards column
+    # Note: Should not drop this later;
+    # use ward info because different wards may share the identical town name
+    df.drop(['ward'], axis=1, inplace=True)
+
     return df
 
 
 def get_age_df(age_csv_path):
     # Load position csv, then drop unnecessary rows & columns
-    df = pd.read_csv(age_csv_path)
-
-    # Column names to be dropped from the dataframe
-    ages = [str(age) for age in range(100)]
-    print(len(ages))
-    ages.append('100+')
-
-    df = df.drop(columns=ages)
+    df = pd.read_csv(age_csv_path, index_col=0)
 
     # Resolve discrepancies of town names
     # between position data & age data
@@ -57,8 +55,12 @@ if __name__ == "__main__":
     pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
     age_csv_path = os.path.join(".", "csv", "age_structure.csv")
 
-    pos_df = get_pos_df(pos_csv_path)
-    print(pos_df)
-
     age_df = get_age_df(age_csv_path)
     print(age_df)
+
+    pos_df = get_pos_df(pos_csv_path)
+    merged_inner = pd.merge(left=age_df,
+                            right=pos_df,
+                            left_on="town_name",
+                            right_on="town_name")
+    print(merged_inner)
