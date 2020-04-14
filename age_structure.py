@@ -66,10 +66,16 @@ def format_df(df, sheet_name):
     for before, after in replacements.items():
         df.columns = df.columns.map(lambda x: x.replace(before, after))
 
-    # Remove "字(aza)" rows,
-    # because populations there are already counted in "大字(Oaza)"
+    # Drop detailed 1-year age classes population,
+    # because some towns lack this data
+    ages = [str(age) for age in range(100)]  # all the age classes
+    ages.append('100+')  # the last element include "+" format
+    df.drop(columns=ages, inplace=True)
+
+    # Drop "小字(koaza)" rows,
+    # because populations there are already counted in "大字(oaza)"
     oaza_df = df[df['town_name'].str.contains("大字計")]
-    aza_indices = []  # indices of the rows to be dropped
+    koaza_indices = []  # indices of the rows to be dropped
     for i in oaza_df.index:
         oaza = df.loc[i]["town_name"].replace("（大字計）", "")
         df.loc[i, "town_name"] = oaza  # Modify original df
@@ -78,7 +84,7 @@ def format_df(df, sheet_name):
         # e.g. for oaza 茂庭, preceding rows are 茂庭字湯ノ沢, 茂庭字松倉... etc.
         # Needs to abort the looping when it's the 1st row
         while i >= 1 and df.loc[i-1]["town_name"].find(oaza + "字") == 0:
-            aza_indices.append(i-1)
+            koaza_indices.append(i-1)
             i -= 1
 
     # Add columns for city ward & gender
@@ -86,8 +92,8 @@ def format_df(df, sheet_name):
     df.insert(0, "gender", gender)  # e.g. m
     df.insert(0, "ward", ward)  # e.g. taihaku
 
-    # Drop those "aza" rows
-    return df.drop(aza_indices)
+    # Drop those "koaza" rows
+    return df.drop(koaza_indices)
 
 
 def generate_csv():
@@ -129,4 +135,4 @@ def generate_csv():
 
 # Debug purpose
 if __name__ == "__main__":
-    dfs = generate_csv()
+    generate_csv()
