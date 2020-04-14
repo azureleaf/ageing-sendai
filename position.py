@@ -4,11 +4,12 @@ import os
 
 
 def get_pos_df(pos_csv_path):
-    # Load position csv, then drop unnecessary rows & columns
+    # Load position csv, then extract necessary rows & columns
     df = pd.read_csv(pos_csv_path, encoding="shift_jis")
     df = df[["市区町村名", "大字町丁目名", "緯度", "経度"]]
     df = df.loc[df['市区町村名'].str.contains("仙台市")]
 
+    # Translate the dataframe header
     replacements = {
         '市区町村名': 'ward',
         '大字町丁目名': 'town_name',
@@ -62,6 +63,7 @@ def analyze_df(full_df):
 
     # Create the age classes list and group them into 3
     # We assume the format of input dataframe columns (e.g. "25-29")
+    # Outcome will be like; {"young": ["0-4", "5-9", "10-14"...], ...}
     age_groups = {
         # 年少人口
         "young": [f'{i * 5}-{i * 5 + 4}' for i in range(0, 3)],
@@ -97,22 +99,23 @@ def analyze_df(full_df):
         row["town_name"] = town_name
 
         # Total population by gender
+        # partial dataframe for this town
         m_df = full_df.loc[
             (full_df["town_name"] == town_name) &
             (full_df["gender"] == "m")]
         f_df = full_df.loc[
             (full_df["town_name"] == town_name) &
             (full_df["gender"] == "f")]
-
-        m_pop = m_df["total_pop"].values[0]
-        f_pop = f_df["total_pop"].values[0]
+        m_pop = m_df["total_pop"].values[0]  # total men
+        f_pop = f_df["total_pop"].values[0]  # total women
         row["gender_ratio"] = m_pop / f_pop * 100 \
             if f_pop != 0 else None  # prevent zero division
         row["total_pop"] = m_pop + f_pop
         row["lat"] = m_df["lat"].values[0]
         row["lon"] = m_df["lon"].values[0]
 
-        # Count the population & percentage data of 3 age groups
+        # Count the population & percentage data
+        # for each of 3 age groups
         for group_name, age_classes in age_groups.items():
             # Dynamically set the name of the df columns
             # e.g. working_pop, working_pop_pc
@@ -125,32 +128,48 @@ def analyze_df(full_df):
             row[pc_col_name] = \
                 row[pop_col_name] / row["total_pop"] * 100
 
+        # Calculate rest indicators
         row["ageing_index"] = row["pop_old"] / row["pop_young"] * \
             100 if row["pop_young"] != 0 else None  # prevent zero division
         row["dependency_ratio"] = row["pop_old"] + \
             row["pop_young"] / row["pop_working"] * \
             100 if row["pop_young"] != 0 else None  # prevent zero division
 
+        # Append the data for this town to the df
         summary_df = summary_df.append(row, ignore_index=True)
 
     return summary_df
 
 
-if __name__ == "__main__":
+def analyze_and_save():
+    '''Read age structure file, then save its stat summary to CSV'''
+
+    # input files
     pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
     age_csv_path = os.path.join(".", "csv", "age_structure.csv")
+
+    # output file
     result_csv_path = os.path.join(".", "csv", "age_structure_summary.csv")
 
+    # Convert CSVs into dataframes
     age_df = get_age_df(age_csv_path)
     pos_df = get_pos_df(pos_csv_path)
 
-    # inner-join 2 dataframes by town names
+    # Inner-join 2 dataframes by town names
     merged_inner = pd.merge(left=age_df,
                             right=pos_df,
                             left_on="town_name",
                             right_on="town_name")
+
+    # Get statistical summary df from merged df
     result_df = analyze_df(merged_inner)
+
     result_df.to_csv(result_csv_path,
                      mode="w",
                      index=True,
                      header=True)
+
+
+# debug
+if __name__ == "__main__":
+    analyze_and_save()
