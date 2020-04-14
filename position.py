@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import os
+import constants
 
 
 def get_pos_df(pos_csv_path):
@@ -19,10 +20,12 @@ def get_pos_df(pos_csv_path):
     for before, after in replacements.items():
         df.columns = df.columns.map(lambda x: x.replace(before, after))
 
-    # Drop wards column
-    # Note: Should not drop this later;
-    # use ward info because different wards may share the identical town name
-    df.drop(['ward'], axis=1, inplace=True)
+    # Convert JA wards name into EN names
+    # which are compatible with the df of age structure
+    # e.g. "仙台市宮城野区" -> "miyagino"
+    for ward_ja, ward_en in constants.wards.items():
+        df = df.replace({"ward": rf'^.*{ward_ja}.*$'},
+                        {"ward": ward_en}, regex=True)
 
     return df
 
@@ -150,6 +153,7 @@ def analyze_and_save():
 
     # output file
     result_csv_path = os.path.join(".", "csv", "age_structure_summary.csv")
+    merged_csv_path = os.path.join(".", "csv", "merged.csv")
 
     # Convert CSVs into dataframes
     age_df = get_age_df(age_csv_path)
@@ -158,9 +162,14 @@ def analyze_and_save():
     # Inner-join 2 dataframes by town names
     merged_inner = pd.merge(left=age_df,
                             right=pos_df,
-                            left_on="town_name",
-                            right_on="town_name")
+                            on=["town_name", "ward"])
 
+    merged_inner.to_csv(merged_csv_path,
+                        mode="w",
+                        index=True,
+                        header=True)
+
+    return
     # Get statistical summary df from merged df
     result_df = analyze_df(merged_inner)
 
@@ -173,3 +182,6 @@ def analyze_and_save():
 # debug
 if __name__ == "__main__":
     analyze_and_save()
+    # pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
+
+    # get_pos_df(pos_csv_path)
