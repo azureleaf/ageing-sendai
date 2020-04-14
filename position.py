@@ -88,6 +88,8 @@ def analyze_df(full_df):
                                        "gender_ratio",  # 男女比
                                        "ageing_index",  # 老年人口指数/老年化指数
                                        "dependency_ratio"  # 従属人口指数
+                                       "lat"  # 緯度
+                                       "lon"  # 経度
                                        ])
 
     for town_name in town_names:
@@ -104,8 +106,11 @@ def analyze_df(full_df):
 
         m_pop = m_df["total_pop"].values[0]
         f_pop = f_df["total_pop"].values[0]
-        row["gender_ratio"] = m_pop / f_pop * 100
+        row["gender_ratio"] = m_pop / f_pop * 100 \
+            if f_pop != 0 else None  # prevent zero division
         row["total_pop"] = m_pop + f_pop
+        row["lat"] = m_df["lat"].values[0]
+        row["lon"] = m_df["lon"].values[0]
 
         # Count the population & percentage data of 3 age groups
         for group_name, age_classes in age_groups.items():
@@ -120,9 +125,11 @@ def analyze_df(full_df):
             row[pc_col_name] = \
                 row[pop_col_name] / row["total_pop"] * 100
 
-        row["ageing_index"] = row["pop_old"] / row["pop_young"] * 100
+        row["ageing_index"] = row["pop_old"] / row["pop_young"] * \
+            100 if row["pop_young"] != 0 else None  # prevent zero division
         row["dependency_ratio"] = row["pop_old"] + \
-            row["pop_young"] / row["pop_working"] * 100
+            row["pop_young"] / row["pop_working"] * \
+            100 if row["pop_young"] != 0 else None  # prevent zero division
 
         summary_df = summary_df.append(row, ignore_index=True)
 
@@ -132,6 +139,7 @@ def analyze_df(full_df):
 if __name__ == "__main__":
     pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
     age_csv_path = os.path.join(".", "csv", "age_structure.csv")
+    result_csv_path = os.path.join(".", "csv", "age_structure_summary.csv")
 
     age_df = get_age_df(age_csv_path)
     pos_df = get_pos_df(pos_csv_path)
@@ -142,4 +150,7 @@ if __name__ == "__main__":
                             left_on="town_name",
                             right_on="town_name")
     result_df = analyze_df(merged_inner)
-    print(result_df)
+    result_df.to_csv(result_csv_path,
+                     mode="w",
+                     index=True,
+                     header=True)
