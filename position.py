@@ -7,12 +7,13 @@ import constants
 def get_pos_df(pos_csv_path):
     # Load position csv, then extract necessary rows & columns
     df = pd.read_csv(pos_csv_path, encoding="shift_jis")
-    df = df[["市区町村名", "大字町丁目名", "緯度", "経度"]]
+    df = df[["市区町村名", "大字町丁目コード", "大字町丁目名", "緯度", "経度"]]
     df = df.loc[df['市区町村名'].str.contains("仙台市")]
 
     # Translate the dataframe header
     replacements = {
         '市区町村名': 'ward',
+        '大字町丁目コード': 'town_code',
         '大字町丁目名': 'town_name',
         '緯度': 'lat',
         '経度': 'lon',
@@ -77,12 +78,14 @@ def analyze_df(full_df):
     }
     age_groups["old"].append("90+")
 
-    town_names = list(full_df.town_name.unique())
+    town_codes = list(full_df.town_code.unique())
 
     # Create dataframes for analysis result
     # Note: You can't calculate age average or age mean,
     # because age structure of people over 90+ isn't known
-    summary_df = pd.DataFrame(columns=["town_name",
+    summary_df = pd.DataFrame(columns=["ward",
+                                       "town_code",
+                                       "town_name",
                                        "total_pop",  # 総人口
                                        "pop_young",  # 年少人口
                                        "pop_working",  # 生産年齢人口
@@ -92,30 +95,36 @@ def analyze_df(full_df):
                                        "pc_old",  # 老年人口比率 (%)
                                        "gender_ratio",  # 男女比
                                        "ageing_index",  # 老年人口指数/老年化指数
-                                       "dependency_ratio"  # 従属人口指数
-                                       "lat"  # 緯度
-                                       "lon"  # 経度
+                                       "dependency_ratio",  # 従属人口指数
+                                       "lat",  # 緯度
+                                       "lon",  # 経度
                                        ])
 
-    for town_name in town_names:
+    for town_code in town_codes:
         row = {}
-        row["town_name"] = town_name
+        row["town_code"] = town_code
 
         # Total population by gender
         # partial dataframe for this town
         m_df = full_df.loc[
-            (full_df["town_name"] == town_name) &
+            (full_df["town_code"] == town_code) &
             (full_df["gender"] == "m")]
         f_df = full_df.loc[
-            (full_df["town_name"] == town_name) &
+            (full_df["town_code"] == town_code) &
             (full_df["gender"] == "f")]
         m_pop = m_df["total_pop"].values[0]  # total men
         f_pop = f_df["total_pop"].values[0]  # total women
         row["gender_ratio"] = m_pop / f_pop * 100 \
             if f_pop != 0 else None  # prevent zero division
         row["total_pop"] = m_pop + f_pop
+
+        # Get values of this town
+        # Both male & female rows have the identical values
+        # for these columns, so pick m_df
         row["lat"] = m_df["lat"].values[0]
         row["lon"] = m_df["lon"].values[0]
+        row["ward"] = m_df["ward"].values[0]
+        row["town_name"] = m_df["town_name"].values[0]
 
         # Count the population & percentage data
         # for each of 3 age groups
@@ -169,7 +178,6 @@ def analyze_and_save():
                         index=True,
                         header=True)
 
-    return
     # Get statistical summary df from merged df
     result_df = analyze_df(merged_inner)
 
@@ -182,6 +190,3 @@ def analyze_and_save():
 # debug
 if __name__ == "__main__":
     analyze_and_save()
-    # pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
-
-    # get_pos_df(pos_csv_path)
