@@ -4,6 +4,9 @@ import os
 import constants
 
 
+is_dubug = False
+
+
 def get_pos_df(pos_csv_path):
     # Load position csv, then extract necessary rows & columns
     df = pd.read_csv(pos_csv_path, encoding="shift_jis")
@@ -173,10 +176,11 @@ def analyze_and_save():
                             right=pos_df,
                             on=["town_name", "ward"])
 
-    merged_inner.to_csv(merged_csv_path,
-                        mode="w",
-                        index=True,
-                        header=True)
+    if is_dubug is True:
+        merged_inner.to_csv(merged_csv_path,
+                            mode="w",
+                            index=True,
+                            header=True)
 
     # Get statistical summary df from merged df
     result_df = analyze_df(merged_inner)
