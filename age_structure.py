@@ -92,7 +92,8 @@ def generate_csv():
     :return: string, relative path to the generated CSV
     '''
     start = time.time()
-    xlsx_path = os.path.join(".", "raw", "age_each_r0204.xlsx")  # input
+    xlsx_path = os.path.join(".", "raw", "town-ages",
+                             "age_each_r0204.xlsx")  # input
     csv_path = os.path.join(".", "csv", "age_structure.csv")  # output
 
     # Seemingly reading Excel file takes quite a time

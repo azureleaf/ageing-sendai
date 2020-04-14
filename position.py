@@ -4,6 +4,7 @@ import os
 import constants
 
 
+# If True, data being processed will be output as CSV
 is_dubug = False
 
 
@@ -160,7 +161,7 @@ def analyze_and_save():
     '''Read age structure file, then save its stat summary to CSV'''
 
     # input files
-    pos_csv_path = os.path.join(".", "raw", "04000-12.0b/04_2018.csv")
+    pos_csv_path = os.path.join(".", "raw", "town-positions", "04_2018.csv")
     age_csv_path = os.path.join(".", "csv", "age_structure.csv")
 
     # output file

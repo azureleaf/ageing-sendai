@@ -95,7 +95,7 @@ if __name__ == "__main__":
     generate_csv = False
 
     shape_csv_path = os.path.join(".", "csv", "sendai_shape.csv")
-    shp_path = os.path.join('.', 'raw', 'shapefile', 'h27ka04.shp')
+    shp_path = os.path.join('.', 'raw', 'shapes', 'h27ka04.shp')
 
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
     sns.mpl.rc("figure", figsize=(10, 6))
