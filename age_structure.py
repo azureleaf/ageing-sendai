@@ -36,9 +36,9 @@ def format_df(df, sheet_name):
     '''Remove redundant rows / columns, and format header'''
 
     # Drop the columns of redundant data
-    df.drop([column_name for column_name in df.columns if
-             column_name.find("人口総数") != -1
-             ], axis=1, inplace=True)
+    # df.drop([column_name for column_name in df.columns if
+    #          column_name.find("人口総数") != -1
+    #          ], axis=1, inplace=True)
 
     # Drop the last row of the redundant data (total population)
     df.drop([len(df.index) - 1], inplace=True)
@@ -46,6 +46,7 @@ def format_df(df, sheet_name):
     # Format the column names for better accessibility
     replacements = {
         '\n': '',
+        '人口総数': 'total_pop',
         '歳': '',
         '町　名': 'town_name',
         '（再掲）': '',
