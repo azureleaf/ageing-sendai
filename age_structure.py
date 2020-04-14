@@ -97,14 +97,14 @@ def generate_csv():
 
     # Seemingly reading Excel file takes quite a time
     sheet_names = get_sheet_names(xlsx_path)
-    print("Excel sheet names retrieved. Time elapsed:", time.time() - start)
+    print("Excel sheet names retrieved.\nTime elapsed: ", time.time() - start)
 
     # List of Pandas dataframes
     dfs = []
 
     for sheet_name_ja, sheet_name_en in sheet_names.items():
-        print("Processing the Excel sheet '", sheet_name_ja,
-              "' Time elapsed:",  time.time() - start)
+        print("Processing the Excel sheet", sheet_name_ja,
+              "\nTime elapsed:",  time.time() - start)
 
         # Note: the "-" symbol is implicitly converted into value 0 here
         df = pd.read_excel(xlsx_path, sheet_name=sheet_name_ja, header=1)
@@ -119,7 +119,7 @@ def generate_csv():
                         index=True,
                         header=True)
 
-    print("CSV generated. Total time elapsed:", time.time() - start)
+    print("CSV generated.\nTime elapsed: ", time.time() - start)
     return csv_path
 
 
