@@ -10,6 +10,9 @@ autopep8 = "*"
 pandas = "*"
 flake8 = "*"
 xlrd = "*"
+pyshp = "*"
+matplotlib = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.8"
