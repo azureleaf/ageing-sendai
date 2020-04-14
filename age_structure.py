@@ -2,6 +2,7 @@
 import pandas as pd
 import os
 import time
+import constants
 
 
 def get_sheet_names(uri):
@@ -24,21 +25,9 @@ def translate(ja_sheet_name):
     '''Tranlate lengthy Japanese names into English abbreviations'''
     '''e.g. convert "太白区（女）" into "taihaku_f" '''
 
-    wards = {
-        "青葉": "aoba",
-        "太白": "taihaku",
-        "泉": "izumi",
-        "宮城野": "miyagino",
-        "若林": "wakabayashi",
-    }
-    genders = {
-        "男": "m",
-        "女": "f"
-    }
-
-    for ward_ja, ward_en in wards.items():
+    for ward_ja, ward_en in constants.wards.items():
         if(ja_sheet_name.find(ward_ja) != -1):
-            for gender_ja, gender_en in genders.items():
+            for gender_ja, gender_en in constants.genders.items():
                 if(ja_sheet_name.find(gender_ja) != -1):
                     return f'{ward_en}_{gender_en}'  # using f-strings
 
