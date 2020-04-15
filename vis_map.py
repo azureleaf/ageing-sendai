@@ -4,6 +4,7 @@ import shapefile as shp
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import sys
 
 
 def read_shapefile(sf):
@@ -19,7 +20,7 @@ def read_shapefile(sf):
     return df
 
 
-def plot_shape(id, s=None):
+def plot_shape(sf, id, s=None):
     """ PLOTS A SINGLE SHAPE """
     # Plot figure
     plt.figure()
@@ -91,8 +92,8 @@ def plot_map(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
         plt.ylim(y_lim)
 
 
-if __name__ == "__main__":
-    generate_csv = False
+def visualize_map():
+    regenerate_csv = False
 
     shape_csv_path = os.path.join(".", "csv", "sendai_shape.csv")
     shp_path = os.path.join('.', 'raw', 'shapes', 'h27ka04.shp')
@@ -100,7 +101,11 @@ if __name__ == "__main__":
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
     sns.mpl.rc("figure", figsize=(10, 6))
 
-    sf = shp.Reader(shp_path, encoding="shift_jis")
+    try:
+        sf = shp.Reader(shp_path, encoding="shift_jis")
+    except Exception as e:
+        print("Shape file doesn't exist! Error:", type(e).__name__)
+        sys.exit(1)
 
     # sf.shapes() returns the array of shape objects
     # print("Number of shapes:", len(sf.shapes()))
@@ -114,11 +119,18 @@ if __name__ == "__main__":
     # Get the smallest index num (not always 0)
     com_id = df.index.values[0]
 
-    plot_shape(com_id)
+    print("com_id:", com_id)
+
+    plot_shape(sf, com_id)
     # plot_map(sf)
 
-    if generate_csv is True:
+    # save dataframe
+    if regenerate_csv is True:
         df.to_csv(shape_csv_path,
                   mode="w",
                   index=True,
                   header=True)
+
+
+if __name__ == "__main__":
+    visualize_map()
