@@ -27,8 +27,11 @@ def read_shapefile(sf):
     return df
 
 
-def plot_shape_df(df):
+def plot_map_df(df):
     """ PLOTS A SINGLE SHAPE """
+
+    plt.rcParams["font.family"] = "Noto Sans CJK JP"
+    plt.rcParams["font.weight"] = "bold"
 
     fig, ax = plt.subplots()
     ax.margins(x=0.1, y=0.05)
@@ -41,10 +44,13 @@ def plot_shape_df(df):
 
     p = PatchCollection(patches, alpha=0.8)
     colors = 100*np.random.rand(len(patches))
+    print(colors)
     p.set_array(np.array(colors))
     ax.add_collection(p)
 
-    plt.xlim(140.4, 141)
+    plt.text(140.9, 38.4, "仙台市", fontsize=10)
+
+    plt.xlim(140.4, 141.1)
     plt.ylim(38.1, 38.5)
 
     plt.show()
@@ -155,7 +161,7 @@ def visualize_map():
     # plot_shape_sf(sf, com_id)
     # # plot_map_sf(sf)
 
-    plot_shape_df(df)
+    plot_map_df(df)
 
     # save dataframe
     if is_debug is True:
