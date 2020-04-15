@@ -21,9 +21,12 @@
 ## Files
 
 - `age_structure.py`
-  - 仙台市の年齢別人口データのエクセルファイルを処理して、CSV を出力する
+  - 仙台市の年齢別町名別人口データのエクセルファイルを処理して、CSVに出力する
 - `position.py`
-  - ~~[Shoelace formula](https://www.101computing.net/the-shoelace-algorithm/)により、各町の面積を数値計算する。~~ (未実装)
+  - 仙台市の町ごとのGPS座標データのエクセルファイルを処理し、上記の年齢データと合算してCSVに出力する
+- `vis_map.py`
+  - 仙台市の町ごとの形状データを処理し、町別年齢構成データと合わせて可視化する
+  - ~~[Shoelace formula](https://www.101computing.net/the-shoelace-algorithm/)により、各町の面積を数値計算し人口密度を求める~~ (未実装)
 - `constants.py`
   - 複数の Python モジュールで共用するデータ
 - `csv/`
@@ -41,6 +44,8 @@
   - 位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
 - 町別の形状データ（各町の面積の計算）
   - 独立行政法人統計センター　地図で見る統計(統計 GIS)　https://www.e-stat.go.jp/gis/statmap-search?page=1&type=2&aggregateUnitForBoundary=A&toukeiCode=00200521&toukeiYear=2015&serveyId=A002005212015
+- 町名の読みがなデータ
+  - 住所.jp http://jusyo.jp/csv/new.php
 - 地図データ：以下のうちのどれかを使う予定
   - `matplotlib` + `basemap`
   - `pyshp`と国が提供している各町の shape file
