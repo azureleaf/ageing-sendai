@@ -27,6 +27,27 @@ def read_shapefile(sf):
     return df
 
 
+def get_center(points):
+    pass
+
+
+def get_bounding_box(polygons):
+
+    x_min = polygons[0][0][0]
+    x_max = polygons[0][0][0]
+    y_min = polygons[0][0][1]
+    y_max = polygons[0][0][1]
+
+    for points in polygons:
+        for point in points:
+            x_min = x_min if point[0] > x_min else point[0]
+            x_max = x_max if point[0] < x_max else point[0]
+            y_min = y_min if point[1] > y_min else point[1]
+            y_max = y_max if point[1] < y_max else point[1]
+
+    return [[x_min, y_min], [x_max, y_max]]
+
+
 def plot_map_df(df):
     """ PLOTS A SINGLE SHAPE """
 
@@ -44,14 +65,17 @@ def plot_map_df(df):
 
     p = PatchCollection(patches, alpha=0.8)
     colors = 100*np.random.rand(len(patches))
-    print(colors)
     p.set_array(np.array(colors))
     ax.add_collection(p)
 
-    plt.text(140.9, 38.4, "仙台市", fontsize=10)
+    plt.text(140.9, 38.4, "仙台市", fontsize=12)
 
-    plt.xlim(140.4, 141.1)
-    plt.ylim(38.1, 38.5)
+    corners = get_bounding_box(df.POINTS.values)
+    plt.xlim(corners[0][0], corners[1][0])
+    plt.ylim(corners[0][1], corners[1][1])
+
+    # plt.xlim(140.4, 141.1)
+    # plt.ylim(38.1, 38.5)
 
     plt.show()
 
@@ -161,7 +185,7 @@ def visualize_map():
     # plot_shape_sf(sf, com_id)
     # # plot_map_sf(sf)
 
-    plot_map_df(df)
+    plot_map_df(df.head(30))
 
     # save dataframe
     if is_debug is True:
