@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import shapefile as shp
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 import seaborn as sns
 import os
 import sys
@@ -13,14 +15,44 @@ def read_shapefile(sf):
     column holding the geometry information.
     """
     fields = [x[0] for x in sf.fields][1:]
-    records = sf.records()
+    records = sf.records()  # get all the records
     shps = [s.points for s in sf.shapes()]
     df = pd.DataFrame(columns=fields, data=records)
-    df = df.assign(coords=shps)
+
+    # assign(): Append a new column or update the existing column
+    # Dataframe can be only 2-dimension, therefore
+    # when a list is put into a cell, it will be converted to string
+    # e.g. [1, 2, 3] => "[1, 2, 3]"
+    df = df.assign(POINTS=shps)
     return df
 
 
-def plot_shape(sf, id, s=None):
+def plot_shape_df(df):
+    """ PLOTS A SINGLE SHAPE """
+
+    fig, ax = plt.subplots()
+    ax.margins(x=0.1, y=0.05)
+    ax.set_aspect('equal')
+    patches = []
+
+    for index, row in df.iterrows():
+        polygon = Polygon(row.POINTS, True)
+        patches.append(polygon)
+
+    p = PatchCollection(patches, alpha=0.8)
+    colors = 100*np.random.rand(len(patches))
+    p.set_array(np.array(colors))
+    ax.add_collection(p)
+
+    plt.xlim(140.4, 141)
+    plt.ylim(38.1, 38.5)
+
+    plt.show()
+
+    return
+
+
+def plot_shape_sf(sf, id, s=None):
     """ PLOTS A SINGLE SHAPE """
     # Plot figure
     plt.figure()
@@ -64,13 +96,12 @@ def plot_shape(sf, id, s=None):
     plt.xlim(shape_ex.bbox[0], shape_ex.bbox[2])
     plt.ylim(shape_ex.bbox[1], shape_ex.bbox[3])
 
-    # Show figure
     plt.show()
 
     return x0, y0
 
 
-def plot_map(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
+def plot_map_sf(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
     '''
     Plot map with lim coordinates
     '''
@@ -94,8 +125,10 @@ def plot_map(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
 
 def visualize_map():
     regenerate_csv = False
+    is_debug = False
 
     shape_csv_path = os.path.join(".", "csv", "sendai_shape.csv")
+    shape_csv_sample_path = os.path.join(".", "csv", "sendai_shape_sample.csv")
     shp_path = os.path.join('.', 'raw', 'shapes', 'h27ka04.shp')
 
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
@@ -104,25 +137,32 @@ def visualize_map():
     try:
         sf = shp.Reader(shp_path, encoding="shift_jis")
     except Exception as e:
-        print("Shape file doesn't exist! Error:", type(e).__name__)
+        print("ERROR: Shape file doesn't exist:", type(e).__name__)
         sys.exit(1)
 
     # sf.shapes() returns the array of shape objects
-    # print("Number of shapes:", len(sf.shapes()))
+    # print("Number of shapes in this file:", len(sf.shapes()))
 
     # Access to each shape
-    # print(sf.records()[200])
+    # print("Sample the first file", sf.records()[0])
 
     df = read_shapefile(sf)
     df = df[df.GST_NAME == '仙台市']
 
     # Get the smallest index num (not always 0)
-    com_id = df.index.values[0]
+    # com_id = df.index.values[0]
+    # print("com_id:", com_id)
+    # plot_shape_sf(sf, com_id)
+    # # plot_map_sf(sf)
 
-    print("com_id:", com_id)
+    plot_shape_df(df)
 
-    plot_shape(sf, com_id)
-    # plot_map(sf)
+    # save dataframe
+    if is_debug is True:
+        df.head(20).to_csv(shape_csv_sample_path,
+                           mode="w",
+                           index=True,
+                           header=True)
 
     # save dataframe
     if regenerate_csv is True:
