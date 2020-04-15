@@ -27,11 +27,21 @@ def read_shapefile(sf):
     return df
 
 
-def get_center(points):
-    pass
+def get_center(polygon):
+    corners = get_bounding_box([polygon])
+    return [(corners[0][0] + corners[1][0]) / 2,
+            (corners[0][1] + corners[1][1]) / 2]
 
 
 def get_bounding_box(polygons):
+    '''
+    Find the corner coords of the bounding box of the points given
+    params:
+        polygons[] (3D array):
+            inner most array refers to a point (that is [x, y])
+    returns:
+        2D array: Positions of 2 corner points
+    '''
 
     x_min = polygons[0][0][0]
     x_max = polygons[0][0][0]
@@ -48,7 +58,7 @@ def get_bounding_box(polygons):
     return [[x_min, y_min], [x_max, y_max]]
 
 
-def plot_map_df(df):
+def plot_map_df(df, show_town_label=False):
     """ PLOTS A SINGLE SHAPE """
 
     plt.rcParams["font.family"] = "Noto Sans CJK JP"
@@ -61,6 +71,10 @@ def plot_map_df(df):
 
     for index, row in df.iterrows():
         polygon = Polygon(row.POINTS, True)
+        if show_town_label is True:
+            # center = np.mean(np.asarray(row.POINTS), axis=0)
+            center = get_center(row.POINTS)
+            plt.text(center[0], center[1], row.S_NAME, fontsize=6)
         patches.append(polygon)
 
     p = PatchCollection(patches, alpha=0.8)
@@ -68,14 +82,9 @@ def plot_map_df(df):
     p.set_array(np.array(colors))
     ax.add_collection(p)
 
-    plt.text(140.9, 38.4, "仙台市", fontsize=12)
-
     corners = get_bounding_box(df.POINTS.values)
     plt.xlim(corners[0][0], corners[1][0])
     plt.ylim(corners[0][1], corners[1][1])
-
-    # plt.xlim(140.4, 141.1)
-    # plt.ylim(38.1, 38.5)
 
     plt.show()
 
@@ -185,7 +194,7 @@ def visualize_map():
     # plot_shape_sf(sf, com_id)
     # # plot_map_sf(sf)
 
-    plot_map_df(df.head(30))
+    plot_map_df(df, show_town_label=True)
 
     # save dataframe
     if is_debug is True:
