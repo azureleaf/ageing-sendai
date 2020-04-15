@@ -4,7 +4,7 @@ import os
 import constants
 
 
-# If True, data being processed will be output as CSV
+# If True, intermediate data will be output as CSV
 is_dubug = False
 
 
@@ -108,16 +108,16 @@ def analyze_df(full_df):
         row = {}
         row["town_code"] = town_code
 
-        # Total population by gender
-        # partial dataframe for this town
+        # Total population of this down by gender
+        # Get partial dataframe for this town
         m_df = full_df.loc[
-            (full_df["town_code"] == town_code) &
-            (full_df["gender"] == "m")]
+            (full_df.town_code == town_code) &
+            (full_df.gender == "m")]
         f_df = full_df.loc[
-            (full_df["town_code"] == town_code) &
-            (full_df["gender"] == "f")]
-        m_pop = m_df["total_pop"].values[0]  # total men
-        f_pop = f_df["total_pop"].values[0]  # total women
+            (full_df.town_code == town_code) &
+            (full_df.gender == "f")]
+        m_pop = m_df.total_pop.values[0]  # total men
+        f_pop = f_df.total_pop.values[0]  # total women
         row["gender_ratio"] = m_pop / f_pop * 100 \
             if f_pop != 0 else None  # prevent zero division
         row["total_pop"] = m_pop + f_pop
@@ -125,10 +125,10 @@ def analyze_df(full_df):
         # Get values of this town
         # Both male & female rows have the identical values
         # for these columns, so pick m_df
-        row["lat"] = m_df["lat"].values[0]
-        row["lon"] = m_df["lon"].values[0]
-        row["ward"] = m_df["ward"].values[0]
-        row["town_name"] = m_df["town_name"].values[0]
+        row["lat"] = m_df.lat.values[0]
+        row["lon"] = m_df.lon.values[0]
+        row["ward"] = m_df.ward.values[0]
+        row["town_name"] = m_df.town_name.values[0]
 
         # Count the population & percentage data
         # for each of 3 age groups
@@ -144,12 +144,12 @@ def analyze_df(full_df):
             row[pc_col_name] = \
                 row[pop_col_name] / row["total_pop"] * 100
 
-        # Calculate rest indicators
-        row["ageing_index"] = row["pop_old"] / row["pop_young"] * \
-            100 if row["pop_young"] != 0 else None  # prevent zero division
+        # Calculate indicators
+        row["ageing_index"] = row["pop_old"] / row["pop_young"] * 100 \
+            if row["pop_young"] != 0 else None  # prevent zero division
         row["dependency_ratio"] = row["pop_old"] + \
-            row["pop_young"] / row["pop_working"] * \
-            100 if row["pop_young"] != 0 else None  # prevent zero division
+            row["pop_young"] / row["pop_working"] * 100 \
+            if row["pop_young"] != 0 else None  # prevent zero division
 
         # Append the data for this town to the df
         summary_df = summary_df.append(row, ignore_index=True)
@@ -172,7 +172,7 @@ def analyze_and_save():
     age_df = get_age_df(age_csv_path)
     pos_df = get_pos_df(pos_csv_path)
 
-    # Inner-join 2 dataframes by town names
+    # Inner-join 2 dataframes by town name & ward
     merged_inner = pd.merge(left=age_df,
                             right=pos_df,
                             on=["town_name", "ward"])
