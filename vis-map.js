@@ -953,12 +953,18 @@ stats =
 ["山の寺三丁目",1057,118,540,399,11.16,51.09,37.75,91.83,338.14,38.334493,140.903402],
 ["友愛町",684,109,361,214,15.94,52.78,31.29,89.47,196.33,38.314207,140.893686]]}
 
-fields = stats.columns;
+// fields = stats.columns;
 towns = stats.data;
 
-const field = (str) => fields.indexOf(str);
+// const field = (str) => fields.indexOf(str);
 
-console.log("loaded!");
+fields = {};
+
+stats.columns.forEach((column, index) => {
+  fields[column] = index;
+});
+
+console.log(fields);
 
 // fetch("./csv/test.txt", { mode: "no-cors" })
 //   .then((response) => response.text())
@@ -966,17 +972,56 @@ console.log("loaded!");
 //   .catch((error) => console.error(error));
 
 // Instantiate Map object: set initial view position & zoom level
-var mymap = new L.Map("mapid").setView([38.3, 140.75], 11);
+var mymap = new L.Map("mapid").setView([38.3, 140.75], 14);
 var tile = L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
 }).addTo(mymap);
 
-var circle = L.circle([38.3, 140.75], {
-  color: "red",
-  fillColor: "#f03",
-  fillOpacity: 0.5,
-  radius: 100,
-}).addTo(mymap);
+// Convert color notation from RGB to HEX
+const rgbToHex = (r = 0, g = 0, b = 0) => {
+  let reducer = (acc, curr) => {
+    // If the input isn't number nor string of number, reject
+    if (isNaN(Number(curr))) {
+      console.error("Incorrect RGB input");
+      return;
+    }
 
-circle.bindPopup("I am a circle.");
+    // When the number is too large or too small
+    if (Number(curr) >= 255) curr = 255;
+    if (Number(curr) <= 0) curr = 0;
+
+    newHex = Number(Math.round(curr)).toString(16);
+
+    // Append "0" when the hex isn't 2-digit
+    if (newHex.length < 2) newHex = "0" + newHex;
+    return acc.toString() + newHex;
+  };
+  hex = [r, g, b].reduce(reducer, "");
+  return hex;
+};
+
+for (const town of towns) {
+  // (255, 0, 0) red when 100%
+  // (255, 255, 255) white when 0 %
+  circle_color2 =
+    "#" +
+    rgbToHex(
+      255,
+      (100 - town[fields.pc_old]) * 2.55,
+      (100 - town[fields.pc_old]) * 2.55
+    );
+
+  circle_color = "hsl(" + (100 - town[fields.pc_old]) * 1.8 + ", 82%, 56%)";
+  console.log(circle_color);
+  var circle = L.circle([town[fields.lat], town[fields.lon]], {
+    color: "gray",
+    fillColor: circle_color,
+    fillOpacity: 0.9,
+    radius: 100,
+  }).addTo(mymap);
+
+  circle.bindPopup(
+    town[fields.town_name] + "<br>高齢者の比率：" + town[fields.pc_old]
+  );
+}
