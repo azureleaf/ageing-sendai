@@ -28,12 +28,6 @@ def read_shapefile(sf):
     return df
 
 
-def get_center(polygon):
-    corners = get_bounding_box([polygon])
-    return [(corners[0][0] + corners[1][0]) / 2,
-            (corners[0][1] + corners[1][1]) / 2]
-
-
 def get_bounding_box(polygons):
     '''
     Find the corners of the bounding box of the points given
@@ -45,30 +39,17 @@ def get_bounding_box(polygons):
         2D array: Positions of 2 corner points
     '''
 
-    def flatten_array():
-        flatten = np.asarray(
-            [item for sublist in polygons for item in sublist])
-        x_max, y_max = np.amax(flatten, axis=0)
-        x_min, y_min = np.amin(flatten, axis=0)
+    flatten = np.asarray(
+        [item for sublist in polygons for item in sublist])
+    x_max, y_max = np.amax(flatten, axis=0)
+    x_min, y_min = np.amin(flatten, axis=0)
 
-        return [[x_min, y_min], [x_max, y_max]]
-
-    def simple_compare():
-        x_min = polygons[0][0][0]
-        x_max = polygons[0][0][0]
-        y_min = polygons[0][0][1]
-        y_max = polygons[0][0][1]
-
-        for points in polygons:
-            for point in points:
-                x_min = x_min if point[0] > x_min else point[0]
-                x_max = x_max if point[0] < x_max else point[0]
-                y_min = y_min if point[1] > y_min else point[1]
-                y_max = y_max if point[1] < y_max else point[1]
-
-        return [[x_min, y_min], [x_max, y_max]]
-
-    return flatten_array()
+    return {
+        "x_min": x_min,
+        "x_max": x_max,
+        "y_min": y_min,
+        "y_max": y_max,
+    }
 
 
 def plot_map_df(df, show_town_label=False):
@@ -93,19 +74,18 @@ def plot_map_df(df, show_town_label=False):
     for index, row in df.iterrows():
         polygon = Polygon(row.POINTS, True)
         if show_town_label is True:
-            # center = np.mean(np.asarray(row.POINTS), axis=0)
-            center = get_center(row.POINTS)
-            plt.text(center[0], center[1], row.S_NAME, fontsize=6)
+            plt.text(row.X_CODE, row.Y_CODE, row.S_NAME, fontsize=6)
         patches.append(polygon)
 
-    p = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.8)
+    # p = PatchCollection(patches, cmap=matplotlib.cm.Reds, alpha=0.6)
+    p = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.6)
     colors = 100*np.random.rand(len(patches))
     p.set_array(np.array(colors))
     ax.add_collection(p)
 
     corners = get_bounding_box(df.POINTS.values)
-    plt.xlim(corners[0][0], corners[1][0])
-    plt.ylim(corners[0][1], corners[1][1])
+    plt.xlim(corners["x_min"], corners["x_max"])
+    plt.ylim(corners["y_min"], corners["y_max"])
 
     plt.show()
 
@@ -191,55 +171,71 @@ def read_csv(pop_csv_path):
 def trim_shape_df(df):
     '''Remove the unnecessary rows / cols from the dataframe'''
 
-    # Extract the rows of towns in Sendai city
-    df = df[df.GST_NAME == '仙台市']
-
     # Extract the necessary columns
     df = df[[
         "KEY_CODE",  # 町名コード
         "S_NAME",  # 町名
         "CITY_NAME",  # 区名（政令指定都市以外では市名）
         "AREA",  # 面積
-        "POINTS"  # 頂点座標群
+        "POINTS",  # 頂点座標群
+        "X_CODE",  # 中心のx座標
+        "Y_CODE",  # 中心のy座標
     ]]
 
     return df
 
 
-def visualize_map(output_csv=False, show_town_label=False):
+def join_dfs(age_stat_df, shape_df):
+    '''Merge 2 dataframes'''
+    shape_df = shape_df.astype({'KEY_CODE': 'int64'})
+
+    merged_df = pd.merge(left=age_stat_df,
+                         right=shape_df,
+                         left_on="town_code",
+                         right_on="KEY_CODE")
+    return merged_df
+
+
+def visualize_map(
+        output_shapes_csv=False,
+        show_town_label=False,
+):
 
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
     sns.mpl.rc("figure", figsize=(10, 6))
 
     try:
         sf = shp.Reader(
-            constants.file_paths["SHAPES_SHP"],
+            constants.file_paths["SHAPE_SHP"],
             encoding="shift_jis")
     except Exception as e:
         print("ERROR: Shape file doesn't exist:", type(e).__name__)
         sys.exit(1)
 
     df = read_shapefile(sf)
-    df = trim_shape_df(df)
 
-    plot_map_df(df, show_town_label)
+    # Extract the Sendai city data only
+    df = df[df.GST_NAME == '仙台市']
 
-    # save dataframe
-    if output_csv is True:
-        df.to_csv(constants.file_paths["SHAPES_CSV"],
+    if output_shapes_csv is True:
+        # Save equivalent of the entire shapefile in CSV format
+        df.to_csv(constants.file_paths["SHAPE_CSV"],
                   mode="w",
                   index=True,
                   header=True)
 
+    # Extract the rows of towns in Sendai city
+    df = trim_shape_df(df)
+
+    # df = df.loc[df["S_NAME"].isin(["岩切１丁目", "岩切字三所南"])]
+    # age_stat_df = read_csv(constants.file_paths["AGEGROUP_POS_CSV"])
+    # join_df = join_dfs(age_stat_df, df)
+
+    plot_map_df(df, show_town_label)
+
 
 if __name__ == "__main__":
-    visualize_map(output_csv=False, show_town_label=False)
-
-    # df = read_csv(constants.file_paths["POP_CSV"])
-    # print(df.head(10))
-
-    # polygons = [
-    #     [[20, 1], [1, 4]],
-    #     [[-1, 12], [11, 24], [8, 0]],
-    # ]
-    # get_bounding_box(polygons)
+    visualize_map(
+        output_shapes_csv=False,
+        show_town_label=False,
+    )
