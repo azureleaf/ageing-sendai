@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
-import os
 import time
 import constants
 
@@ -24,7 +23,7 @@ def get_sheet_names(xlsx_df):
 def translate(ja_sheet_name):
     '''
     Tranlate lengthy Japanese names into English abbreviations.
-    e.g. convert "太白区（女）" into "taihaku_f"
+    e.g. "太白区（女）" => "taihaku_f"
     '''
 
     for ward_ja, ward_en in constants.wards.items():
@@ -36,11 +35,6 @@ def translate(ja_sheet_name):
 
 def format_df(df, sheet_name):
     '''Remove redundant rows/columns from the dataframe, then format header'''
-
-    # Drop the columns of redundant data
-    # df.drop([column_name for column_name in df.columns if
-    #          column_name.find("人口総数") != -1
-    #          ], axis=1, inplace=True)
 
     # Drop the last row of the redundant data (total population)
     df.drop([len(df.index) - 1], inplace=True)
@@ -95,16 +89,11 @@ def generate_csv():
     :return: string, relative path to the generated CSV
     '''
     start = time.time()  # to check performance
-
-    # Path of the input
-    xlsx_path = os.path.join(".", "raw", "town-ages",
-                             "age_each_r0204.xlsx")
-    # Path of the output
-    csv_path = os.path.join(".", "csv", "age_structure.csv")
+    print("Loading Excel file...")
 
     # Read excel; this takes few seconds
-    xlsx_df = pd.ExcelFile(xlsx_path)
-    print("Excel data loaded. Time elapsed:", time.time() - start)
+    xlsx_df = pd.ExcelFile(constants.file_paths["AGE_XLSX"])
+    print("Excel data loaded.\nTime elapsed:", time.time() - start)
 
     sheet_names = get_sheet_names(xlsx_df)
 
@@ -123,14 +112,14 @@ def generate_csv():
     # Merge dataframes derived
     all_wards_df = pd.concat(dfs, ignore_index=True)
 
-    all_wards_df.to_csv(csv_path,
+    all_wards_df.to_csv(constants.file_paths["AGE_CSV"],
                         mode="w",
                         index=True,
                         header=True)
 
-    print("CSV generated. Time elapsed:", time.time() - start)
-    print("See:", csv_path)
-    return csv_path
+    print("Age structure file generated:", constants.file_paths["AGE_CSV"],
+          "\nTime elapsed:", time.time() - start)
+    return constants.file_paths["AGE_CSV"]
 
 
 if __name__ == "__main__":

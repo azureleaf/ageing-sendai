@@ -1,12 +1,13 @@
 import numpy as np
 import pandas as pd
 import shapefile as shp
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon
 from matplotlib.collections import PatchCollection
 import seaborn as sns
-import os
 import sys
+import constants
 
 
 def read_shapefile(sf):
@@ -35,7 +36,8 @@ def get_center(polygon):
 
 def get_bounding_box(polygons):
     '''
-    Find the corner coords of the bounding box of the points given
+    Find the corners of the bounding box of the points given
+
     params:
         polygons[] (3D array):
             inner most array refers to a point (that is [x, y])
@@ -43,23 +45,42 @@ def get_bounding_box(polygons):
         2D array: Positions of 2 corner points
     '''
 
-    x_min = polygons[0][0][0]
-    x_max = polygons[0][0][0]
-    y_min = polygons[0][0][1]
-    y_max = polygons[0][0][1]
+    def flatten_array():
+        flatten = np.asarray(
+            [item for sublist in polygons for item in sublist])
+        x_max, y_max = np.amax(flatten, axis=0)
+        x_min, y_min = np.amin(flatten, axis=0)
 
-    for points in polygons:
-        for point in points:
-            x_min = x_min if point[0] > x_min else point[0]
-            x_max = x_max if point[0] < x_max else point[0]
-            y_min = y_min if point[1] > y_min else point[1]
-            y_max = y_max if point[1] < y_max else point[1]
+        return [[x_min, y_min], [x_max, y_max]]
 
-    return [[x_min, y_min], [x_max, y_max]]
+    def simple_compare():
+        x_min = polygons[0][0][0]
+        x_max = polygons[0][0][0]
+        y_min = polygons[0][0][1]
+        y_max = polygons[0][0][1]
+
+        for points in polygons:
+            for point in points:
+                x_min = x_min if point[0] > x_min else point[0]
+                x_max = x_max if point[0] < x_max else point[0]
+                y_min = y_min if point[1] > y_min else point[1]
+                y_max = y_max if point[1] < y_max else point[1]
+
+        return [[x_min, y_min], [x_max, y_max]]
+
+    return flatten_array()
 
 
 def plot_map_df(df, show_town_label=False):
-    """ PLOTS A SINGLE SHAPE """
+    """
+    Plots all the town shapes in the dataframe passed
+
+    params:
+        df (Pandas.DataFrame):
+            Rows of towns and their detail info
+        show_town_label (bool):
+            True to add text label for every town
+    """
 
     plt.rcParams["font.family"] = "Noto Sans CJK JP"
     plt.rcParams["font.weight"] = "bold"
@@ -77,7 +98,7 @@ def plot_map_df(df, show_town_label=False):
             plt.text(center[0], center[1], row.S_NAME, fontsize=6)
         patches.append(polygon)
 
-    p = PatchCollection(patches, alpha=0.8)
+    p = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.8)
     colors = 100*np.random.rand(len(patches))
     p.set_array(np.array(colors))
     ax.add_collection(p)
@@ -124,7 +145,6 @@ def plot_shape_sf(sf, id, s=None):
     plt.plot(x_lon, y_lat)
 
     # Centroid-ish point of the shape
-    # These are mean, not midpoint
     x0 = np.mean(x_lon)
     y0 = np.mean(y_lat)
     plt.text(x0, y0, "Town", fontsize=10)
@@ -162,54 +182,64 @@ def plot_map_sf(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
         plt.ylim(y_lim)
 
 
-def visualize_map():
-    regenerate_csv = False
-    is_debug = False
+def read_csv(pop_csv_path):
+    df = pd.read_csv(pop_csv_path)
 
-    shape_csv_path = os.path.join(".", "csv", "sendai_shape.csv")
-    shape_csv_sample_path = os.path.join(".", "csv", "sendai_shape_sample.csv")
-    shp_path = os.path.join('.', 'raw', 'shapes', 'h27ka04.shp')
+    return df
+
+
+def trim_shape_df(df):
+    '''Remove the unnecessary rows / cols from the dataframe'''
+
+    # Extract the rows of towns in Sendai city
+    df = df[df.GST_NAME == '仙台市']
+
+    # Extract the necessary columns
+    df = df[[
+        "KEY_CODE",  # 町名コード
+        "S_NAME",  # 町名
+        "CITY_NAME",  # 区名（政令指定都市以外では市名）
+        "AREA",  # 面積
+        "POINTS"  # 頂点座標群
+    ]]
+
+    return df
+
+
+def visualize_map(output_csv=False, show_town_label=False):
 
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
     sns.mpl.rc("figure", figsize=(10, 6))
 
     try:
-        sf = shp.Reader(shp_path, encoding="shift_jis")
+        sf = shp.Reader(
+            constants.file_paths["SHAPES_SHP"],
+            encoding="shift_jis")
     except Exception as e:
         print("ERROR: Shape file doesn't exist:", type(e).__name__)
         sys.exit(1)
 
-    # sf.shapes() returns the array of shape objects
-    # print("Number of shapes in this file:", len(sf.shapes()))
-
-    # Access to each shape
-    # print("Sample the first file", sf.records()[0])
-
     df = read_shapefile(sf)
-    df = df[df.GST_NAME == '仙台市']
+    df = trim_shape_df(df)
 
-    # Get the smallest index num (not always 0)
-    # com_id = df.index.values[0]
-    # print("com_id:", com_id)
-    # plot_shape_sf(sf, com_id)
-    # # plot_map_sf(sf)
-
-    plot_map_df(df, show_town_label=True)
+    plot_map_df(df, show_town_label)
 
     # save dataframe
-    if is_debug is True:
-        df.head(20).to_csv(shape_csv_sample_path,
-                           mode="w",
-                           index=True,
-                           header=True)
-
-    # save dataframe
-    if regenerate_csv is True:
-        df.to_csv(shape_csv_path,
+    if output_csv is True:
+        df.to_csv(constants.file_paths["SHAPES_CSV"],
                   mode="w",
                   index=True,
                   header=True)
 
 
 if __name__ == "__main__":
-    visualize_map()
+    visualize_map(output_csv=False, show_town_label=False)
+
+    # df = read_csv(constants.file_paths["POP_CSV"])
+    # print(df.head(10))
+
+    # polygons = [
+    #     [[20, 1], [1, 4]],
+    #     [[-1, 12], [11, 24], [8, 0]],
+    # ]
+    # get_bounding_box(polygons)
