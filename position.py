@@ -203,4 +203,4 @@ def analyze_and_save(output_format="csv"):
 
 # debug
 if __name__ == "__main__":
-    analyze_and_save(output_format="json")
+    analyze_and_save(output_format="csv")
