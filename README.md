@@ -1,5 +1,19 @@
 # 仙台高齢化地域の可視化
 
+## ToC
+
+- [仙台高齢化地域の可視化](#%e4%bb%99%e5%8f%b0%e9%ab%98%e9%bd%a2%e5%8c%96%e5%9c%b0%e5%9f%9f%e3%81%ae%e5%8f%af%e8%a6%96%e5%8c%96)
+  - [ToC](#toc)
+  - [Usage](#usage)
+    - [Visualize Sendai ageing heat map](#visualize-sendai-ageing-heat-map)
+    - [Generate the files](#generate-the-files)
+    - [Visualize Sendai towns with Matplotlib viwer](#visualize-sendai-towns-with-matplotlib-viwer)
+  - [Purpose](#purpose)
+  - [Packages](#packages)
+  - [Files](#files)
+  - [Discussion](#discussion)
+  - [Reference](#reference)
+
 ## Usage
 
 ### Visualize Sendai ageing heat map
@@ -31,7 +45,7 @@
 - 仙台の高齢化地域を可視化する（単なる興味）
 - Python や JavaScript での可視化ツール使用に慣れる
 
-## 使用したライブラリ
+## Packages
 
 - `Pandas`
 - `Numpy`
@@ -70,7 +84,7 @@
   - ダウンロードしてきた CSV ファイルの置き場
   - データサイズが大きいため元ファイルは`.gitignore` している
 
-## 考察
+## Discussion
 
 - 高齢化率が低いのは、交通結節点と新興住宅地が多い。
   - 泉中央
