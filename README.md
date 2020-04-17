@@ -7,7 +7,7 @@
   - [Usage](#usage)
     - [Visualize Sendai ageing heat map](#visualize-sendai-ageing-heat-map)
     - [Generate the files](#generate-the-files)
-    - [Visualize Sendai towns with Matplotlib viwer](#visualize-sendai-towns-with-matplotlib-viwer)
+    - [Visualize Sendai towns with Matplotlib viewer](#visualize-sendai-towns-with-matplotlib-viewer)
   - [Purpose](#purpose)
   - [Packages](#packages)
   - [Files](#files)
@@ -25,38 +25,43 @@
     - [仙台の町の半分以上は「超高齢社会」である](#%e4%bb%99%e5%8f%b0%e3%81%ae%e7%94%ba%e3%81%ae%e5%8d%8a%e5%88%86%e4%bb%a5%e4%b8%8a%e3%81%af%e8%b6%85%e9%ab%98%e9%bd%a2%e7%a4%be%e4%bc%9a%e3%81%a7%e3%81%82%e3%82%8b)
   - [Todos](#todos)
   - [Reference](#reference)
+    - [仙台市の町別の年齢別人口データ（令和２年４月１日）](#%e4%bb%99%e5%8f%b0%e5%b8%82%e3%81%ae%e7%94%ba%e5%88%a5%e3%81%ae%e5%b9%b4%e9%bd%a2%e5%88%a5%e4%ba%ba%e5%8f%a3%e3%83%87%e3%83%bc%e3%82%bf%e4%bb%a4%e5%92%8c%ef%bc%92%e5%b9%b4%ef%bc%94%e6%9c%88%ef%bc%91%e6%97%a5)
+    - [宮城県各市町村の町の GPS 座標情報（平成 30 年分）](#%e5%ae%ae%e5%9f%8e%e7%9c%8c%e5%90%84%e5%b8%82%e7%94%ba%e6%9d%91%e3%81%ae%e7%94%ba%e3%81%ae-gps-%e5%ba%a7%e6%a8%99%e6%83%85%e5%a0%b1%e5%b9%b3%e6%88%90-30-%e5%b9%b4%e5%88%86)
+    - [町別の形状データ（世界測地系緯度経度・Shapefile：04 宮城県）](#%e7%94%ba%e5%88%a5%e3%81%ae%e5%bd%a2%e7%8a%b6%e3%83%87%e3%83%bc%e3%82%bf%e4%b8%96%e7%95%8c%e6%b8%ac%e5%9c%b0%e7%b3%bb%e7%b7%af%e5%ba%a6%e7%b5%8c%e5%ba%a6%e3%83%bbshapefile04-%e5%ae%ae%e5%9f%8e%e7%9c%8c)
+    - [地図データ：](#%e5%9c%b0%e5%9b%b3%e3%83%87%e3%83%bc%e3%82%bf)
 
 ## Usage
 
 ### Visualize Sendai ageing heat map
 
-1. [Open on GitHub](https://azureleaf.github.io/ageing-sendai)  / Or open local `index.html` with the browser
+1. [Open on GitHub](https://azureleaf.github.io/ageing-sendai) / Or open local `index.html` with the browser
 
 - Screenshot:
-- ![Heatmap Screenshot](./img/ageing_heatmap_screenshot.jpg)
+  <br>![Heatmap Screenshot](./img/ageing_heatmap_screenshot.jpg)
 
 ### Generate the files
 
-1. Download original files from the internet (See reference)
+1. Download public data files from the internet (See reference)
 2. Specify the paths of downloaded files in `constants.py`
-3. Install Python3 and `pipenv`
+3. Install Python 3 and `pipenv`
 4. `pipenv shell`
-5. `pipenv install` from `Pipfile`
+5. `pipenv install`
 6. `mkdir csv`
 7. `python3 age_structure.py`: Generates `csv/ages.csv`
 8. `python3 position.py`: Generates `csv/ages_positions.csv`
 
-### Visualize Sendai towns with Matplotlib viwer
+### Visualize Sendai towns with Matplotlib viewer
 
 1. `python3 town_shape.py`
 
-- 形状頂点データを元にすべての町を描画した結果は以下の通り（色分けは境界を明示する以外の意味はありません）
-- ![Sendai Town Shapes](./img/sendai_towns.png)
+- 形状頂点データを元にすべての町を描画した結果は以下の通り
+- 色分けは境界を明示する以外の意味はありません
+  <br>![Sendai Town Shapes](./img/sendai_towns.png)
 
 ## Purpose
 
-- 仙台の高齢化地域を可視化する（単なる興味）
-- Python や JavaScript での可視化ツール使用に慣れる
+- 仙台の高齢化地域に興味があった
+- コロナウイルスでデータ可視化に注目が集まる今日この頃に、Python や JavaScript のデータ処理ツールに慣れたかった
 
 ## Packages
 
@@ -65,7 +70,7 @@
 - `Matplotlib`
 - `xlrd`: Excel ファイルの読み込み
 - `myshp`: Shapefile の読み込み
-- `Leaflet.js`: 地図へのプロット処理
+- `Leaflet.js`: 地図上へのプロット
 
 ## Files
 
@@ -76,26 +81,27 @@
 
 ### `age_structure.py`
 
-- 仙台市の年齢別町名別人口データのエクセルファイルを処理して、CSV に出力する
-- 元データのエクセルファイルは区と性別ごとに複数シートにわかれしてまっているので集約する
-- 「大字」と「小字」でダブルカウントされている行があるため、大字に集約する：
-- 例：「種次字中屋敷」「種次字番古」「種次字南番古」「種次（大字計）」という行が連続している場合には「種次」という大字名を記憶し、それを手がかりにして「種次字」で始まる地名の行を削除する
-- 列の見出しが日本語表記のままではデータ処理で扱いにくいので、英語に変換
+- 仙台市の年齢別・町名別・性別人口データのエクセルファイルを処理する
+- 元データのエクセルファイルは区と性別ごとに複数シートにわかれてしまっているので集約する
+- 「大字」と「小字」で人口がダブルカウントされているため、大字に集約する
+- 例えば「種次字中屋敷」「種次字番古」「種次字南番古」「種次（大字計）」という行が連続しているので「種次」という大字名を記憶し、それを手がかりにして「種次字」で始まる地名の行を削除する
+- 列の見出しが日本語表記のままではデータ処理で扱いにくいので、英字の略号に変換
+- ここまでの結果（５歳刻みでの町別・年齢別人口構成データ）を CSV に出力する
 
 ### `position.py`
 
-- 仙台市の町ごとの GPS 座標データのエクセルファイルを処理し、上記の年齢データと合算して CSV に出力する
-- `age_structure.py`の出力結果をデータフレーム A として取り込む
-- データフレーム A から人口三区分（年少人口、生産年齢人口、老年人口）毎の人数・人口比を集計し、また高齢化率、従属人口比率、老年化指数、男女比も算出する
-- 別ファイルから各町丁大字の代表点の GPS 座標を取得し、データフレーム B とする
+- `age_structure.py`の出力結果である年齢別人口構成データを DataFrame A として取り込む
+- これから人口三区分（年少人口、生産年齢人口、老年人口）毎の人数・人口比を集計し、また高齢化率、従属人口比率、老年化指数、男女比も算出する
+- 仙台市の各町・丁・大字の代表点の GPS 座標データが入ったエクセルファイルを処理する。 データを整形して DataFrame B とする
 - 「丁目」の書式が年齢構成ファイルでは数字だが、位置情報ファイルでは漢数字になってしまっているので統一する
-- データフレーム A とデータフレーム B を、町名と区名をキーにして JOIN する（町名だけをキーにすると失敗する。例えば青葉区と太白区両方に「茂庭」という地名があるため）
+- DataFrame A と DataFrame B を、町名と区名をキーにして JOIN する（町名だけをキーにすると失敗する。例えば青葉区と太白区両方に「茂庭」という地名があるため）
+- ここまでの集計結果（町別の人口三区分の人口構成と町の位置情報）を CSV として出力する
 
 ### `town_shapes.py`
 
-- 仙台の全ての町の形状を可視化する
-- 仙台市の町ごとの形状データを処理し、町別年齢構成データと合わせて可視化...したかったのだが、この形状データと他の年齢構成データの地域区分の方法に齟齬があるため、その用途には使えなかった
-- Shapefile は、仙台の全ての町の形の頂点情報を持っているが、このままだと扱いにくいので Pandas の Dataframe に変換し、あとは頂点を描画していくだけ。
+- ダウンロードしてきた Shapefile は、仙台の全ての町それぞれについて、その境界の頂点座標情報を持っている
+- しかし Shapefile のままだと扱いにくいので Pandas の DataFrame に変換し、頂点情報を使ってグラフに描画していく
+- 仙台市の町ごとの形状データを処理し、町別年齢構成データと合わせて色分けし可視化...したかったが、この形状データと他の年齢構成データの地域区分の大きさに齟齬があるためこのプランは挫折した
 
 ### `constants.py`
 
@@ -107,10 +113,12 @@
 
 ### `raw/`
 
-- ダウンロードしてきた CSV ファイルの置き場
+- ダウンロードしてきたエクセルファイルなどの置き場
 - データサイズが大きいため元ファイルは`.gitignore` している
 
 ## Discussion
+
+高齢化率のヒートマップを眺めると以下のようなことがわかる
 
 ### 交通結節点と新興住宅地では高齢化率が低い
 
@@ -161,21 +169,29 @@
 ## Todos
 
 - 統計検定で信頼性を検証する。人数が少なすぎて高齢化率の計算が統計的に意味のない地域もある。統計検定で除外すべきだが、どの検定をやるべきか？？？要検討
-- もっといいデータを見つける。それにしても、機関ごとに町の区分方法や識別番号などがバラバラで泣きたくなる
+- もっといい元データを見つける。データ作成機関ごとに町の区分方法や識別番号などがバラバラで泣きたくなる
+- 店舗データなどがあればもっとおもしろい分析ができそうだが...「買い物難民指数」を発明するとか、年齢別死亡率と併せて今後の高齢化動向を予測するとか
 
 ## Reference
 
-- 仙台市の町別の年齢別人口データ（令和２年４月１日）
-  - 町名別年齢（各歳）別住民基本台帳人口　http://www.city.sendai.jp/chosatoke/shise/toke/jinko/chomebetsu.html
-  - 仙台の町ごとの１歳刻み・男女別での年齢人口のデータを含む
-  - 元データの宮城野区の地名「二（大字計）」は「二木（大字計）」の間違いだったので、該当する箇所を手動で置換した
-- 宮城県各市町村の町の GPS 座標情報（平成 30 年分）
-  - 位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
-  - 仙台の各町の代表点の緯度経度を含む
-- 町別の形状データ
-  - 独立行政法人統計センター　地図で見る統計(統計 GIS)　https://www.e-stat.go.jp/gis/statmap-search?page=1&type=2&aggregateUnitForBoundary=A&toukeiCode=00200521&toukeiYear=2015&serveyId=A002005212015
-- 地図データ：
-  - OpenStreetMap：　https://www.openstreetmap.org/
-  - `matplotlib` + `basemap`：　出力結果が見にくのでボツ
-  - `matplotlib` + `pyshp`：　国交省の Shapefile における地域区分の単位が人口データの区分単位とズレているためボツ
-  - Google Map：　 OpenStreetMap と同じことができるが、ライセンス的に面倒なのでボツ
+### 仙台市の町別の年齢別人口データ（令和２年４月１日）
+
+- 町名別年齢（各歳）別住民基本台帳人口　http://www.city.sendai.jp/chosatoke/shise/toke/jinko/chomebetsu.html
+- 仙台の町ごとの１歳刻み・男女別での年齢人口のデータを含む
+- 元データの宮城野区の地名「二（大字計）」は「二木（大字計）」の間違いだったので、これが登場する３箇所を手動で置換した
+
+### 宮城県各市町村の町の GPS 座標情報（平成 30 年分）
+
+- 位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
+- このデータは仙台の各町の代表点の緯度経度を含む
+
+### 町別の形状データ（世界測地系緯度経度・Shapefile：04 宮城県）
+
+- 独立行政法人統計センター　地図で見る統計(統計 GIS)　https://www.e-stat.go.jp/gis/statmap-search?page=1&type=2&aggregateUnitForBoundary=A&toukeiCode=00200521&toukeiYear=2015&serveyId=A002005212015
+
+### 地図データ：
+
+- OpenStreetMap：　https://www.openstreetmap.org/
+- `matplotlib` + `basemap`：　描画結果がどうも洗練されていないし解像度がしょぼそうなのでボツ
+- `matplotlib` + `pyshp`：　国交省の Shapefile における地域区分の単位が人口データの区分単位とズレているためボツ
+- Google Map：　 OpenStreetMap と同じことができるが、ライセンス的に面倒そうなのでボツ
