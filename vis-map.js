@@ -1001,10 +1001,23 @@ const renderMap = () => {
 
     // RGB vs HSL: Not sure if which color scheme is
     // better for visualization
-    color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
-    color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.4 + ", 100%, 50%)";
+    var color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
 
-    var circle = L.circle([town[fields.lat], town[fields.lon]], {
+    // Cut-off for old population ratio
+    // Set between 0-100 (%)
+    // e.g. 81%, 85%, 90%, 100% will be shown in the identical color
+    //     when the upper cutoff is 80%
+    const [lowerCutoff, upperCutoff] = [0, 50];
+    pc_old = pc_old > upperCutoff ? upperCutoff: pc_old;
+    pc_old = pc_old < lowerCutoff ? lowerCutoff: pc_old;
+
+    // Set between 0-360 (degrees)
+    var [hueMin, hueMax] = [0, 240];
+    var hue = (pc_old * (hueMax - hueMin)) / (upperCutoff - lowerCutoff);
+
+    const color_hsl = "hsl(" + hue + ", 100%, 50%)";
+
+    const circle = L.circle([town[fields.lat], town[fields.lon]], {
       color: "gray", // stroke color
       fillColor: color_hsl,
       fillOpacity: 0.8,
