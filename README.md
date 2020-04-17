@@ -14,6 +14,7 @@
     - [`index.html`と `vis-map.js`](#indexhtml%e3%81%a8-vis-mapjs)
     - [`age_structure.py`](#agestructurepy)
     - [`position.py`](#positionpy)
+    - [`analyze.py`](#analyzepy)
     - [`town_shapes.py`](#townshapespy)
     - [`constants.py`](#constantspy)
     - [`csv/`](#csv)
@@ -44,11 +45,12 @@
 1. Download public data files from the internet (See reference)
 2. Specify the paths of downloaded files in `constants.py`
 3. Install Python 3 and `pipenv`
-4. `pipenv shell`
-5. `pipenv install`
-6. `mkdir csv`
-7. `python3 age_structure.py`: Generates `csv/ages.csv`
-8. `python3 position.py`: Generates `csv/ages_positions.csv`
+4. Install `Noto Sans CJK JP` font (or specify Japanese font in your computer at `constants.py`)
+5. `pipenv shell`
+6. `pipenv install`
+7. `mkdir csv`
+8. `python3 age_structure.py`: Generates CSV (configure with booleans)
+9. `python3 analyze.py`: Generates CSVs, JSON, and histogram (configure with booleans)
 
 ### Visualize Sendai towns with Matplotlib viewer
 
@@ -91,11 +93,16 @@
 ### `position.py`
 
 - `age_structure.py`の出力結果である年齢別人口構成データを DataFrame A として取り込む
-- これから人口三区分（年少人口、生産年齢人口、老年人口）毎の人数・人口比を集計し、また高齢化率、従属人口比率、老年化指数、男女比も算出する
 - 仙台市の各町・丁・大字の代表点の GPS 座標データが入ったエクセルファイルを処理する。 データを整形して DataFrame B とする
 - 「丁目」の書式が年齢構成ファイルでは数字だが、位置情報ファイルでは漢数字になってしまっているので統一する
 - DataFrame A と DataFrame B を、町名と区名をキーにして JOIN する（町名だけをキーにすると失敗する。例えば青葉区と太白区両方に「茂庭」という地名があるため）
 - ここまでの集計結果（町別の人口三区分の人口構成と町の位置情報）を CSV として出力する
+
+### `analyze.py`
+
+- `position.py`を内部で呼び出す
+- これを元に人口三区分（年少人口、生産年齢人口、老年人口）毎の人数・人口比を集計し、また高齢化率、従属人口比率、老年化指数、男女比も算出する
+- この集計結果をCSVまたはJSONに保存し、またヒストグラムにする
 
 ### `town_shapes.py`
 
@@ -165,6 +172,8 @@
 |   高齢地域   | 14%以上 21%未満 |    214 |
 |  超高齢地域  |     21%以上     |    607 |
 |     合計     |        -        |    949 |
+
+<br>![Ageing rate vs Number of towns](./img/ageing_hist.png)
 
 ## Todos
 
