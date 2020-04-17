@@ -960,60 +960,69 @@ stats.columns.forEach((column, index) => {
   fields[column] = index;
 });
 
-// Instantiate Map object: set initial view position & zoom level
-var mymap = new L.Map("mapid").setView([38.2682, 140.8694], 14);
-var tile = L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
-  attribution:
-    '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(mymap);
-
-// Convert color notation from RGB to HEX
-const rgbToHex = (r = 0, g = 0, b = 0) => {
-  let reducer = (acc, curr) => {
-    // If the input isn't number nor string of number, reject
-    if (isNaN(Number(curr))) {
-      console.error("Incorrect RGB input");
-      return;
-    }
-
-    // When the number is too large or too small
-    if (Number(curr) >= 255) curr = 255;
-    if (Number(curr) <= 0) curr = 0;
-
-    newHex = Number(Math.round(curr)).toString(16);
-
-    // Append "0" when the hex isn't 2-digit
-    if (newHex.length < 2) newHex = "0" + newHex;
-    return acc.toString() + newHex;
-  };
-  hex = [r, g, b].reduce(reducer, "");
-  return hex;
-};
-
-for (const town of towns) {
-  pc_old = town[fields.pc_old];
-
-  // RGB vs HSL: Not sure if which color scheme is
-  // better for visualization
-  color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
-  color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.5 + ", 100%, 50%)";
-
-  var circle = L.circle([town[fields.lat], town[fields.lon]], {
-    color: "gray", // stroke color
-    fillColor: color_hsl,
-    fillOpacity: 0.8,
-    weight: 1, // stroke width
-    radius: 100,
+const renderMap = () => {
+  // Instantiate Map object: set initial view position & zoom level
+  var mymap = new L.Map("mapid").setView([38.2682, 140.8694], 14);
+  var tile = L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
+    attribution:
+      '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(mymap);
 
-  circle.bindPopup(
-    `<span style='font-size: 130%'>${town[fields.town_name]}</span><br> \
-    <span style='font-size: 120%'>高齢人口比率：<b style='font-size: 250%;'>${Math.round(town[fields.pc_old])}</b> ％</span> \
-    <p style='margin-top: 15px;'>老年化指数　：${town[fields.ageing_index]}<br> \
+  // Convert color notation from RGB to HEX
+  const rgbToHex = (r = 0, g = 0, b = 0) => {
+    let reducer = (acc, curr) => {
+      // If the input isn't number nor string of number, reject
+      if (isNaN(Number(curr))) {
+        console.error("Incorrect RGB input");
+        return;
+      }
+
+      // When the number is too large or too small
+      if (Number(curr) >= 255) curr = 255;
+      if (Number(curr) <= 0) curr = 0;
+
+      newHex = Number(Math.round(curr)).toString(16);
+
+      // Append "0" when the hex isn't 2-digit
+      if (newHex.length < 2) newHex = "0" + newHex;
+      return acc.toString() + newHex;
+    };
+    hex = [r, g, b].reduce(reducer, "");
+    return hex;
+  };
+
+  for (const town of towns) {
+    pc_old = town[fields.pc_old];
+
+    // RGB vs HSL: Not sure if which color scheme is
+    // better for visualization
+    color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
+    color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.5 + ", 100%, 50%)";
+
+    var circle = L.circle([town[fields.lat], town[fields.lon]], {
+      color: "gray", // stroke color
+      fillColor: color_hsl,
+      fillOpacity: 0.8,
+      weight: 1, // stroke width
+      radius: 100,
+    }).addTo(mymap);
+
+    circle.bindPopup(
+      `<span style='font-size: 130%'>${town[fields.town_name]}</span><br> \
+    <span style='font-size: 120%'>高齢人口比率：<b style='font-size: 250%;'>${Math.round(
+      town[fields.pc_old]
+    )}</b> ％</span> \
+    <p style='margin-top: 15px;'>老年化指数　：${
+      town[fields.ageing_index]
+    }<br> \
     総人口　　　：${town[fields.total_pop]}人<br> \
     高齢人口　　：${town[fields.pop_old]}人<br> \
     生産年齢人口：${town[fields.pop_working]}人<br> \
     年少人口　　：${town[fields.pop_young]}人<br> \
     女性100人に対する男性数：${town[fields.gender_ratio]}人</p>`
-  );
-}
+    );
+  }
+};
+
+renderMap();
+
