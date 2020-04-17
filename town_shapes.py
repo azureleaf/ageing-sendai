@@ -63,7 +63,7 @@ def plot_map_df(df, show_town_label=False):
             True to add text label for every town
     """
 
-    plt.rcParams["font.family"] = "Noto Sans CJK JP"
+    plt.rcParams["font.family"] = constants.japanese_font
     plt.rcParams["font.weight"] = "bold"
 
     fig, ax = plt.subplots()
@@ -237,5 +237,5 @@ def visualize_map(
 if __name__ == "__main__":
     visualize_map(
         output_shapes_csv=False,
-        show_town_label=False,
+        show_town_label=True,
     )
