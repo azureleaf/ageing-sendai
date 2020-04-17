@@ -28,7 +28,7 @@ file_paths = {
     "AGEGROUP_POS_JSON": os.path.join(
         ".", "results", "agegroups_positions.json"),
     "SHAPE_CSV": os.path.join(".", "results", "shapes.csv"),
-    "AGEING_HIST_PNG": os.path.join(".", "results", "ageing_hist.png"),
+    "AGEING_HIST_PNG": os.path.join(".", "img", "ageing_hist.png"),
 }
 
 japanese_font = "Noto Sans CJK JP"

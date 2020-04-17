@@ -3,6 +3,7 @@ import pandas as pd
 import constants
 import position
 import time
+import matplotlib.pyplot as plt
 
 
 def analyze_df(full_df):
@@ -107,9 +108,8 @@ def analyze_df(full_df):
     return summary_df
 
 
-if __name__ == "__main__":
+def main(save_csv=False, save_json=False, save_hist=False):
     start = time.time()
-    output_format = ""
 
     # Get the dataframe of age structures & positions
     # of all the towns in Sendai
@@ -120,14 +120,26 @@ if __name__ == "__main__":
     # Get statistical summary df from merged df
     df = analyze_df(df)
 
-    if output_format == "csv":
+    if save_hist is True:
+        plt.rcParams["font.family"] = constants.japanese_font
+
+        ax = df.hist(column="pc_old", bins=50)
+
+        for x in ax[0]:
+            x.set_title("仙台市各町における老年人口比率の頻度分布", weight='bold')
+            x.set_xlabel("老年人口比率（％）", weight='bold', size=10)
+            x.set_ylabel("頻度", weight='bold', size=10)
+
+        plt.savefig(constants.file_paths["AGEING_HIST_PNG"])
+
+    if save_csv is True:
         print("Generating CSV file...\n===")
         df.to_csv(constants.file_paths["AGEGROUP_POS_CSV"],
                   mode="w",
                   index=True,
                   header=True)
 
-    if output_format == "json":
+    if save_json is True:
         print("Generating JSON file...\n===")
 
         # Drop unnecessary columns because JSON file size tends to be big
@@ -143,3 +155,11 @@ if __name__ == "__main__":
         )
 
     print("Done.\n===\nTime elapsed:", time.time() - start)
+
+
+if __name__ == "__main__":
+    main(
+        save_hist=True,
+        save_csv=False,
+        save_json=False
+    )
