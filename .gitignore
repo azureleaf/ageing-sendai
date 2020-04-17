@@ -2,4 +2,3 @@ raw
 .vscode
 __pycache__
 csv/
-!age_structure_summary.csv
