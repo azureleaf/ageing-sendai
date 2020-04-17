@@ -955,6 +955,11 @@ stats =
 
 towns = stats.data;
 
+// Mapping from field name to index number;
+// this improves the accessibility to the towns data
+//    by creating the shorthand for indices
+// e.g. "fields.total_pop" returns "1"
+//    because it's the 2nd element in stats.columns
 fields = {};
 stats.columns.forEach((column, index) => {
   fields[column] = index;
@@ -971,33 +976,33 @@ const renderMap = () => {
   // Convert color notation from RGB to HEX
   const rgbToHex = (r = 0, g = 0, b = 0) => {
     let reducer = (acc, curr) => {
-      // If the input isn't number nor string of number, reject
+      // When the input isn't number, reject it
       if (isNaN(Number(curr))) {
         console.error("Incorrect RGB input");
         return;
       }
 
-      // When the number is too large or too small
+      // When the number is too large or too small, limit it
       if (Number(curr) >= 255) curr = 255;
       if (Number(curr) <= 0) curr = 0;
 
-      newHex = Number(Math.round(curr)).toString(16);
+      hex = Number(Math.round(curr)).toString(16);
 
       // Append "0" when the hex isn't 2-digit
-      if (newHex.length < 2) newHex = "0" + newHex;
-      return acc.toString() + newHex;
+      if (hex.length < 2) hex = "0" + hex;
+      return acc.toString() + hex;
     };
-    hex = [r, g, b].reduce(reducer, "");
-    return hex;
+    return [r, g, b].reduce(reducer, "");
   };
 
-  for (const town of towns) {
+  towns.forEach((town) => {
+    // % of old age population
     pc_old = town[fields.pc_old];
 
     // RGB vs HSL: Not sure if which color scheme is
     // better for visualization
     color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
-    color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.5 + ", 100%, 50%)";
+    color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.4 + ", 100%, 50%)";
 
     var circle = L.circle([town[fields.lat], town[fields.lon]], {
       color: "gray", // stroke color
@@ -1021,8 +1026,7 @@ const renderMap = () => {
     年少人口　　：${town[fields.pop_young]}人<br> \
     女性100人に対する男性数：${town[fields.gender_ratio]}人</p>`
     );
-  }
+  });
 };
 
 renderMap();
-
