@@ -953,26 +953,15 @@ stats =
 ["山の寺三丁目",1057,118,540,399,11.16,51.09,37.75,91.83,338.14,38.334493,140.903402],
 ["友愛町",684,109,361,214,15.94,52.78,31.29,89.47,196.33,38.314207,140.893686]]}
 
-// fields = stats.columns;
 towns = stats.data;
 
-// const field = (str) => fields.indexOf(str);
-
 fields = {};
-
 stats.columns.forEach((column, index) => {
   fields[column] = index;
 });
 
-console.log(fields);
-
-// fetch("./csv/test.txt", { mode: "no-cors" })
-//   .then((response) => response.text())
-//   .then((data) => console.log(data))
-//   .catch((error) => console.error(error));
-
 // Instantiate Map object: set initial view position & zoom level
-var mymap = new L.Map("mapid").setView([38.3, 140.75], 14);
+var mymap = new L.Map("mapid").setView([38.2682, 140.8694], 14);
 var tile = L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
   attribution:
     '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -1002,26 +991,29 @@ const rgbToHex = (r = 0, g = 0, b = 0) => {
 };
 
 for (const town of towns) {
-  // (255, 0, 0) red when 100%
-  // (255, 255, 255) white when 0 %
-  circle_color2 =
-    "#" +
-    rgbToHex(
-      255,
-      (100 - town[fields.pc_old]) * 2.55,
-      (100 - town[fields.pc_old]) * 2.55
-    );
+  pc_old = town[fields.pc_old];
 
-  circle_color = "hsl(" + (100 - town[fields.pc_old]) * 1.8 + ", 82%, 56%)";
-  console.log(circle_color);
+  // RGB vs HSL: Not sure if which color scheme is
+  // better for visualization
+  color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
+  color_hsl = "hsl(" + (100 - town[fields.pc_old]) * 2.5 + ", 100%, 50%)";
+
   var circle = L.circle([town[fields.lat], town[fields.lon]], {
-    color: "gray",
-    fillColor: circle_color,
-    fillOpacity: 0.9,
+    color: "gray", // stroke color
+    fillColor: color_hsl,
+    fillOpacity: 0.8,
+    weight: 1, // stroke width
     radius: 100,
   }).addTo(mymap);
 
   circle.bindPopup(
-    town[fields.town_name] + "<br>高齢者の比率：" + town[fields.pc_old]
+    `<span style='font-size: 130%'>${town[fields.town_name]}</span><br> \
+    <span style='font-size: 120%'>高齢人口比率：<b style='font-size: 250%;'>${Math.round(town[fields.pc_old])}</b> ％</span> \
+    <p style='margin-top: 15px;'>老年化指数　：${town[fields.ageing_index]}<br> \
+    総人口　　　：${town[fields.total_pop]}人<br> \
+    高齢人口　　：${town[fields.pop_old]}人<br> \
+    生産年齢人口：${town[fields.pop_working]}人<br> \
+    年少人口　　：${town[fields.pop_young]}人<br> \
+    女性100人に対する男性数：${town[fields.gender_ratio]}人</p>`
   );
 }
