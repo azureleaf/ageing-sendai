@@ -15,14 +15,15 @@ def read_shapefile(sf):
     Read a shapefile into a Pandas dataframe with a 'coords'
     column holding the geometry information.
     """
+
     fields = [x[0] for x in sf.fields][1:]
     records = sf.records()  # get all the records
     shps = [s.points for s in sf.shapes()]
     df = pd.DataFrame(columns=fields, data=records)
 
     # assign(): Append a new column or update the existing column
-    # Dataframe can be only 2-dimension, therefore
-    # when a list is put into a cell, it will be converted to string
+    # Dataframe can hold 2D matrix only, therefore
+    #   a list put into a cell are implicitly stringified
     # e.g. [1, 2, 3] => "[1, 2, 3]"
     df = df.assign(POINTS=shps)
     return df
@@ -33,10 +34,10 @@ def get_bounding_box(polygons):
     Find the corners of the bounding box of the points given
 
     params:
-        polygons[] (3D array):
-            inner most array refers to a point (that is [x, y])
+        polygons (3D array):
+            a inner-most array refers to a point (x, y)
     returns:
-        2D array: Positions of 2 corner points
+        (dict): Positions of 2 corner points
     '''
 
     flatten = np.asarray(
@@ -68,9 +69,10 @@ def plot_map_df(df, show_town_label=False):
 
     fig, ax = plt.subplots()
     ax.margins(x=0.1, y=0.05)
-    ax.set_aspect('equal')
-    patches = []
+    ax.set_aspect('equal')  # grid shape
 
+    # Push town shapes to the list
+    patches = []
     for index, row in df.iterrows():
         polygon = Polygon(row.POINTS, True)
         if show_town_label is True:
@@ -79,10 +81,11 @@ def plot_map_df(df, show_town_label=False):
 
     # p = PatchCollection(patches, cmap=matplotlib.cm.Reds, alpha=0.6)
     p = PatchCollection(patches, cmap=matplotlib.cm.jet, alpha=0.6)
-    colors = 100*np.random.rand(len(patches))
+    colors = 100 * np.random.rand(len(patches))
     p.set_array(np.array(colors))
     ax.add_collection(p)
 
+    # Set the size of the window
     corners = get_bounding_box(df.POINTS.values)
     plt.xlim(corners["x_min"], corners["x_max"])
     plt.ylim(corners["y_min"], corners["y_max"])
@@ -140,36 +143,8 @@ def plot_shape_sf(sf, id, s=None):
     return x0, y0
 
 
-def plot_map_sf(sf, x_lim=None, y_lim=None, figsize=(11, 9)):
-    '''
-    Plot map with lim coordinates
-    '''
-    plt.figure(figsize=figsize)
-    id = 0
-    for shape in sf.shapeRecords():
-        x = [i[0] for i in shape.shape.points[:]]
-        y = [i[1] for i in shape.shape.points[:]]
-        plt.plot(x, y, 'k')
-
-        if (x_lim is None) & (y_lim is None):
-            x0 = np.mean(x)
-            y0 = np.mean(y)
-            plt.text(x0, y0, id, fontsize=10)
-        id = id + 1
-
-    if (x_lim is not None) & (y_lim is not None):
-        plt.xlim(x_lim)
-        plt.ylim(y_lim)
-
-
-def read_csv(pop_csv_path):
-    df = pd.read_csv(pop_csv_path)
-
-    return df
-
-
 def trim_shape_df(df):
-    '''Remove the unnecessary rows / cols from the dataframe'''
+    '''Remove the unnecessary columnss from the dataframe'''
 
     # Extract the necessary columns
     df = df[[
@@ -200,6 +175,7 @@ def visualize_map(
         output_shapes_csv=False,
         show_town_label=False,
 ):
+    '''Read shapefile, convert it to df, then show in the viewer'''
 
     sns.set(style="whitegrid", palette="pastel", color_codes=True)
     sns.mpl.rc("figure", figsize=(10, 6))
@@ -226,10 +202,6 @@ def visualize_map(
 
     # Extract the rows of towns in Sendai city
     df = trim_shape_df(df)
-
-    # df = df.loc[df["S_NAME"].isin(["岩切１丁目", "岩切字三所南"])]
-    # age_stat_df = read_csv(constants.file_paths["AGEGROUP_POS_CSV"])
-    # join_df = join_dfs(age_stat_df, df)
 
     plot_map_df(df, show_town_label)
 

@@ -112,7 +112,7 @@ def main(save_csv=False, save_json=False, save_hist=False):
     start = time.time()
 
     # Get the dataframe of age structures & positions
-    # of all the towns in Sendai
+    #   of all the towns in Sendai
     df = position.merge_dfs()
 
     print("Calculating the statistics of the df...\n===")
@@ -159,7 +159,7 @@ def main(save_csv=False, save_json=False, save_hist=False):
 
 if __name__ == "__main__":
     main(
-        save_hist=True,
-        save_csv=False,
+        save_hist=False,
+        save_csv=True,
         save_json=False
     )

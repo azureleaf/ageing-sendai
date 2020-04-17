@@ -5,9 +5,7 @@ import constants
 
 
 def get_sheet_names(xlsx_df):
-    '''
-    List necessary sheetnames with their English translations
-    '''
+    '''List necessary sheetnames & their English translations'''
 
     # We're not interested in some Excel sheets with redundant data
     # Drop such sheets which have certain keywords
@@ -21,8 +19,7 @@ def get_sheet_names(xlsx_df):
 
 
 def translate(ja_sheet_name):
-    '''
-    Tranlate lengthy Japanese names into English abbreviations.
+    '''Tranlate lengthy Japanese names into English abbreviations.
     e.g. "太白区（女）" => "taihaku_f"
     '''
 
@@ -30,7 +27,7 @@ def translate(ja_sheet_name):
         if(ja_sheet_name.find(ward_ja) != -1):
             for gender_ja, gender_en in constants.genders.items():
                 if(ja_sheet_name.find(gender_ja) != -1):
-                    return f'{ward_en}_{gender_en}'  # using f-strings
+                    return f'{ward_en}_{gender_en}'  # f-strings
 
 
 def format_df(df, sheet_name):
@@ -86,7 +83,8 @@ def format_df(df, sheet_name):
 def generate_csv():
     '''Parse Excel file of population-age distribution
 
-    :return: string, relative path to the generated CSV
+    returns:
+        string: relative path to the generated CSV
     '''
     start = time.time()  # to check performance
     print("Loading Excel file...")
@@ -119,8 +117,10 @@ def generate_csv():
 
     print("Age structure file generated:", constants.file_paths["AGE_CSV"],
           "\nTime elapsed:", time.time() - start)
+
     return constants.file_paths["AGE_CSV"]
 
 
+# debug
 if __name__ == "__main__":
     generate_csv()

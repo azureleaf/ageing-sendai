@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 import constants
+import os.path
+import age_structure
 
 
 def get_pos_df(pos_csv_path):
-    # Load position csv, then extract necessary rows & columns
+    '''Load position csv as dataframe, format, and return'''
+
     df = pd.read_csv(pos_csv_path, encoding="shift_jis")
+
+    # Extract necessary rows & columns
     df = df[["市区町村名", "大字町丁目コード", "大字町丁目名", "緯度", "経度"]]
     df = df.loc[df['市区町村名'].str.contains("仙台市")]
 
@@ -21,7 +26,7 @@ def get_pos_df(pos_csv_path):
         df.columns = df.columns.map(lambda x: x.replace(before, after))
 
     # Convert JA wards name into EN names
-    # which are compatible with the df of age structure
+    #   which are compatible with the df of age structure
     # e.g. "仙台市宮城野区" -> "miyagino"
     for ward_ja, ward_en in constants.wards.items():
         df = df.replace({"ward": rf'^.*{ward_ja}.*$'},
@@ -31,7 +36,8 @@ def get_pos_df(pos_csv_path):
 
 
 def get_age_df(age_csv_path):
-    # Load position csv, then drop unnecessary rows & columns
+    '''Load age structure CSV as dataframe, format and return'''
+
     df = pd.read_csv(age_csv_path, index_col=0)
 
     # Resolve discrepancies of town name notations
@@ -58,6 +64,10 @@ def get_age_df(age_csv_path):
 def merge_dfs(output_csv=False):
     '''Read age structure file, then save its stat summary to CSV'''
 
+    # When the dependency file doesn't exist, generate it
+    if not os.path.isfile(constants.file_paths["AGE_CSV"]):
+        age_structure.generate_csv()
+
     # Convert CSVs into dataframes
     age_df = get_age_df(constants.file_paths["AGE_CSV"])
     pos_df = get_pos_df(constants.file_paths["POS_CSV"])
@@ -68,12 +78,14 @@ def merge_dfs(output_csv=False):
                          on=["town_name", "ward"])
 
     if output_csv is True:
-        merged_df.to_json(
-            constants.file_paths["AGEGROUP_POS_JSON"],
-            orient="split",
-            force_ascii=False)
+        # This file isn't dependency of any other scripts
+        merged_df.to_csv(
+            constants.file_paths["AGE_POS_CSV"],
+            mode="w",
+            index=True,
+            header=True)
 
-    print("Successfully merged 2 dataframes!\n===")
+    print("Successfully merged two dataframes!\n===")
     return merged_df
 
 
