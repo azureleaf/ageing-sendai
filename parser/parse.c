@@ -3,9 +3,11 @@
 #include <iconv.h>
 #include <unistd.h> // access()
 
-#define S_SIZE (1024) // Length of a line in the file
-#define NUM_FIELDS 14
-#define LEN_FIELD_NAME_MAX 30 // e.g. "住居表示フラグ" is 21 Bytes, I guess
+#define S_SIZE 1024    // Length of a line in the file
+#define V_SIZE 30      // Length of a value between commas
+#define ALL_F_NUM 14   // number of header fields: 都道府県名, 市区町村名...
+#define KEY_F_NUM 5    // number of key header fields: ward, oaza, koaza, lat, lon
+#define F_NAME_SIZE 30 // e.g. "住居表示フラグ" is 21 Bytes
 
 // Position of fields in the source CSV header
 #define WARD 1
@@ -21,18 +23,31 @@ char sendai_path[] = "./ages_parsed.csv";
 int parse_miyagi_csv(void);
 int sjis2utf8(char *, char *);
 int has_expected_header(char *);
+int count_comma(char *, int, int);
+int split(char *, char[ALL_F_NUM][V_SIZE]);
 
 int main()
 {
+    // char teststr[] = "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen";
+    // char result[ALL_F_NUM][V_SIZE];
+    // split(teststr, result);
+    // printf("%ld", sizeof(result) / sizeof(result[0]));
+    // int i;
+    // for (i = 0; i < ALL_F_NUM; ++i)
+    // {
+    //     printf("%s", result[i]);
+    // }
+
+    // return 0;
+
     // Check existance of UTF-8 file
     if (access(miyagi_utf8_path, F_OK) == -1)
-        if (parse_miyagi_csv())
-            return 1; // on error
+        if (sjis2utf8(miyagi_sjis_path, miyagi_utf8_path))
+            return 1;
 
-    if (!has_expected_header(sendai_path))
+    if (!has_expected_header(miyagi_utf8_path))
         return 1;
-
-    printf("hello!");
+    printf("Header format is successfully validated.");
 
     return 0;
 }
@@ -63,7 +78,7 @@ int parse_miyagi_csv(void)
 
     if ((fo = fopen(sendai_path, "w")) == NULL)
     {
-        printf("ERROR: couldn't specify the output file path!");
+        printf("ERROR: couldn't specify the output file path!\n");
         return 1;
     }
 
@@ -131,13 +146,13 @@ int has_expected_header(char *csv_path)
 {
     FILE *fi = fopen(csv_path, "r");
     char header[S_SIZE];
-    char fields[NUM_FIELDS][LEN_FIELD_NAME_MAX];
-    char *p; // pointer to the token found
+    char fields[ALL_F_NUM][F_NAME_SIZE];
+    char *p; // pointer to the token found in the string
     int i = 0;
 
     if (fi == NULL)
     {
-        printf("ERROR: CSV file not found!");
+        printf("ERROR: CSV file not found!\n");
         return 1;
     }
 
@@ -145,16 +160,43 @@ int has_expected_header(char *csv_path)
     p = strtok(header, ",");
     strcpy(fields[i], p);
 
+    fclose(fi);
+
     while ((p = strtok(NULL, ",")) != NULL)
         strcpy(fields[++i], p);
 
-    // for (i = 0; i < NUM_FIELDS; i++)
-    //     printf("%s,", fields[i]);
-    // printf("\n");
-
+    // return 1 if all the field names are matched, if not return 0
     return strcmp(fields[WARD], "\"市区町村名\"") ==
            strcmp(fields[OAZA], "\"大字・丁目名\"") ==
            strcmp(fields[KOAZA], "\"小字・通称名\"") ==
            strcmp(fields[LAT], "\"緯度\"") ==
            strcmp(fields[LON], "\"経度\"") == 0;
+}
+
+// Count the number of commas in the string given
+// This function isn't used
+int count_comma(char *text, int i, int count)
+{
+    if (!text[i])
+        return count;
+    else
+    {
+        if (text[i] == ',')
+            count++;
+        i++;
+        count_comma(text, i, count);
+    }
+}
+
+int split(char *s, char result[ALL_F_NUM][V_SIZE])
+{
+    char *tp; // pointer to the token found
+    int i = 0;
+
+    tp = strtok(s, ",");
+    strcpy(result[i], tp);
+    while ((tp = strtok(NULL, ",")) != NULL)
+        strcpy(result[++i], tp);
+
+    return 0;
 }
