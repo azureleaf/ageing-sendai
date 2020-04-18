@@ -2,3 +2,5 @@ raw
 .vscode
 __pycache__
 results/
+parser/*
+!parser/parse.c
