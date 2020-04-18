@@ -1,8 +1,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <iconv.h>
+#include <unistd.h> // access()
 
-#define S_SIZE (2048) // Length of a line in the file
+#define S_SIZE (1024) // Length of a line in the file
+#define NUM_FIELDS 14
+#define LEN_FIELD_NAME_MAX 30 // e.g. "住居表示フラグ" is 21 Bytes, I guess
+
+// Position of fields in the source CSV header
+#define WARD 1
+#define OAZA 2
+#define KOAZA 3
+#define LAT 8
+#define LON 9
 
 char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv";
 char miyagi_utf8_path[] = "./miyagi_utf8.csv";
@@ -10,10 +20,19 @@ char sendai_path[] = "./ages_parsed.csv";
 
 int parse_miyagi_csv(void);
 int sjis2utf8(char *, char *);
+int has_expected_header(char *);
 
 int main()
 {
-    parse_miyagi_csv();
+    // Check existance of UTF-8 file
+    if (access(miyagi_utf8_path, F_OK) == -1)
+        if (parse_miyagi_csv())
+            return 1; // on error
+
+    if (!has_expected_header(sendai_path))
+        return 1;
+
+    printf("hello!");
 
     return 0;
 }
@@ -23,6 +42,12 @@ int parse_miyagi_csv(void)
     FILE *fi, *fo;
     char buff[S_SIZE];
 
+    if (access(sendai_path, F_OK) != -1)
+    {
+        printf("INFO: The file \"%s\" already exists\n", sendai_path);
+        return 1;
+    }
+
     // If the source file doesn't exist, generate it
     if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
     {
@@ -31,14 +56,14 @@ int parse_miyagi_csv(void)
         // When the even file generation fails, abort
         if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
         {
-            printf("Error: source file not found!");
+            printf("ERROR: source file not found!");
             return 1;
         }
-        printf("Successfully converted SHIFT-JIS file into UTF-8.");
     };
+
     if ((fo = fopen(sendai_path, "w")) == NULL)
     {
-        printf("Error: couldn't specify the output file path!");
+        printf("ERROR: couldn't specify the output file path!");
         return 1;
     }
 
@@ -46,9 +71,9 @@ int parse_miyagi_csv(void)
     fgets(buff, S_SIZE, fi);
     fputs(buff, fo);
 
+    // Filter the rows of towns in Sendai city
     char keyword[] = "仙台市";
     char *result;
-
     while (fgets(buff, S_SIZE, fi) != NULL)
     {
         if (strstr(buff, keyword) != NULL)
@@ -57,6 +82,8 @@ int parse_miyagi_csv(void)
 
     fclose(fi);
     fclose(fo);
+
+    printf("INFO: Extracted Sendai towns as: %s\n", sendai_path);
 
     return 0;
 }
@@ -95,5 +122,39 @@ int sjis2utf8(char *sjis_path, char *utf8_path)
     fclose(fp_src);
     iconv_close(icd);
 
+    printf("INFO: Converted SHIFT-JIS file into UTF-8 as: %s\n", miyagi_utf8_path);
+
     return 0;
+}
+
+int has_expected_header(char *csv_path)
+{
+    FILE *fi = fopen(csv_path, "r");
+    char header[S_SIZE];
+    char fields[NUM_FIELDS][LEN_FIELD_NAME_MAX];
+    char *p; // pointer to the token found
+    int i = 0;
+
+    if (fi == NULL)
+    {
+        printf("ERROR: CSV file not found!");
+        return 1;
+    }
+
+    fgets(header, S_SIZE, fi);
+    p = strtok(header, ",");
+    strcpy(fields[i], p);
+
+    while ((p = strtok(NULL, ",")) != NULL)
+        strcpy(fields[++i], p);
+
+    // for (i = 0; i < NUM_FIELDS; i++)
+    //     printf("%s,", fields[i]);
+    // printf("\n");
+
+    return strcmp(fields[WARD], "\"市区町村名\"") ==
+           strcmp(fields[OAZA], "\"大字・丁目名\"") ==
+           strcmp(fields[KOAZA], "\"小字・通称名\"") ==
+           strcmp(fields[LAT], "\"緯度\"") ==
+           strcmp(fields[LON], "\"経度\"") == 0;
 }
