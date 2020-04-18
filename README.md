@@ -11,8 +11,8 @@
   - [Purpose](#purpose)
   - [Packages](#packages)
   - [Files](#files)
-    - [`index.html`と `vis-map.js`](#indexhtml%e3%81%a8-vis-mapjs)
-    - [`colormap.html`](#colormaphtml)
+    - [`vis-map.js`と`index.html` (実際のページを開く)](#vis-mapjs%e3%81%a8indexhtml-%e5%ae%9f%e9%9a%9b%e3%81%ae%e3%83%9a%e3%83%bc%e3%82%b8%e3%82%92%e9%96%8b%e3%81%8f)
+    - [`colormap.html` (実際のページを開く)](#colormaphtml-%e5%ae%9f%e9%9a%9b%e3%81%ae%e3%83%9a%e3%83%bc%e3%82%b8%e3%82%92%e9%96%8b%e3%81%8f)
     - [`age_structure.py`](#agestructurepy)
     - [`position.py`](#positionpy)
     - [`analyze.py`](#analyzepy)
@@ -29,14 +29,14 @@
   - [Reference](#reference)
     - [仙台市の町別の年齢別人口データ（令和２年４月１日）](#%e4%bb%99%e5%8f%b0%e5%b8%82%e3%81%ae%e7%94%ba%e5%88%a5%e3%81%ae%e5%b9%b4%e9%bd%a2%e5%88%a5%e4%ba%ba%e5%8f%a3%e3%83%87%e3%83%bc%e3%82%bf%e4%bb%a4%e5%92%8c%ef%bc%92%e5%b9%b4%ef%bc%94%e6%9c%88%ef%bc%91%e6%97%a5)
     - [宮城県各市町村の町の GPS 座標情報（平成 30 年分）](#%e5%ae%ae%e5%9f%8e%e7%9c%8c%e5%90%84%e5%b8%82%e7%94%ba%e6%9d%91%e3%81%ae%e7%94%ba%e3%81%ae-gps-%e5%ba%a7%e6%a8%99%e6%83%85%e5%a0%b1%e5%b9%b3%e6%88%90-30-%e5%b9%b4%e5%88%86)
-    - [町別の形状データ（世界測地系緯度経度・Shapefile：04 宮城県）](#%e7%94%ba%e5%88%a5%e3%81%ae%e5%bd%a2%e7%8a%b6%e3%83%87%e3%83%bc%e3%82%bf%e4%b8%96%e7%95%8c%e6%b8%ac%e5%9c%b0%e7%b3%bb%e7%b7%af%e5%ba%a6%e7%b5%8c%e5%ba%a6%e3%83%bbshapefile04-%e5%ae%ae%e5%9f%8e%e7%9c%8c)
+    - [町別の形状データ（平成２７年分・世界測地系緯度経度・Shapefile：04 宮城県）](#%e7%94%ba%e5%88%a5%e3%81%ae%e5%bd%a2%e7%8a%b6%e3%83%87%e3%83%bc%e3%82%bf%e5%b9%b3%e6%88%90%ef%bc%92%ef%bc%97%e5%b9%b4%e5%88%86%e3%83%bb%e4%b8%96%e7%95%8c%e6%b8%ac%e5%9c%b0%e7%b3%bb%e7%b7%af%e5%ba%a6%e7%b5%8c%e5%ba%a6%e3%83%bbshapefile04-%e5%ae%ae%e5%9f%8e%e7%9c%8c)
     - [地図データ：](#%e5%9c%b0%e5%9b%b3%e3%83%87%e3%83%bc%e3%82%bf)
 
 ## Usage
 
 ### Visualize Sendai ageing heat map
 
-1. [Open on GitHub](https://azureleaf.github.io/ageing-sendai) / Or open local `index.html` with the browser
+1. [Open on GitHub](https://azureleaf.github.io/ageing-sendai) / Or open `index.html` locally with the browser
 
 - Screenshot:
   <br>![Heatmap Screenshot](./img/ageing_heatmap_screenshot.jpg)
@@ -79,14 +79,14 @@
 
 ## Files
 
-### `index.html`と `vis-map.js`
+### `vis-map.js`と`index.html` ([実際のページを開く](https://azureleaf.github.io/ageing-sendai/))
 
 - OpenStreetMap への高齢化情報のプロット
 - `vis-map.js`内部で以下の Python で出力されたデータを使っている
 - 老年人口比率（0%-100%）を HSL の色相（0 度-240 度）に置換して表示色を決定する
 - leaflet.js の Popup オブジェクトを使って詳細情報を表示する
 
-### `colormap.html`
+### `colormap.html` ([実際のページを開く](https://azureleaf.github.io/ageing-sendai/colormap.html))
 
 - 地図へプロットする際のカラーマッピングの検討に使ったファイル
 - カラーマップとして有名な「Hot」「Reds」「Autumn」「Jet」「HSV」を検討した
@@ -207,10 +207,10 @@
 
 ### 宮城県各市町村の町の GPS 座標情報（平成 30 年分）
 
-- 国交省位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
+- 位置参照情報ダウンロードサービス（国土交通省）： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
 - このデータは仙台の各町の代表点の緯度経度を含んでいる
 
-### 町別の形状データ（世界測地系緯度経度・Shapefile：04 宮城県）
+### 町別の形状データ（平成２７年分・世界測地系緯度経度・Shapefile：04 宮城県）
 
 - 独立行政法人統計センター　地図で見る統計(統計 GIS)　https://www.e-stat.go.jp/gis/statmap-search?page=1&type=2&aggregateUnitForBoundary=A&toukeiCode=00200521&toukeiYear=2015&serveyId=A002005212015
 
