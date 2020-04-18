@@ -26,7 +26,7 @@ def analyze_df(age_pos_df):
         # 老年人口
         "old": [f'{i * 5}-{i * 5 + 4}' for i in range(13, 18)]
     }
-    age_groups["old"].append("90+")
+    age_groups["old"].append("90-")
 
     town_codes = list(age_pos_df.town_code.unique())
 
@@ -49,6 +49,11 @@ def analyze_df(age_pos_df):
                                        "lat",  # 緯度
                                        "lon",  # 経度
                                        ])
+
+    # ages = [f'm{i * 5}-{i * 5 + 4}' for i in range(0, 18)] + ["m90-"]
+    # ages += [f'f{i * 5}-{i * 5 + 4}' for i in range(0, 18)] + ["f90-"]
+    # age_gender_df = pd.DataFrame(columns=ages)
+    # print(age_gender_df)
 
     for town_code in town_codes:
         row = {}

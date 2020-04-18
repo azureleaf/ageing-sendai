@@ -44,7 +44,7 @@ def format_df(df, sheet_name):
         '町　名': 'town_name',
         '（再掲）': '',
         '～': '-',
-        '以上': '+'
+        '以上': '-'
     }
     for before, after in replacements.items():
         df.columns = df.columns.map(lambda x: x.replace(before, after))
@@ -53,7 +53,7 @@ def format_df(df, sheet_name):
     # because some towns lack this data
     # [0, 1, 2, ... 99, 100+]
     ages = [str(age) for age in range(100)]  # all the age classes
-    ages.append('100+')  # the last element
+    ages.append('100-')  # the last element
     df.drop(columns=ages, inplace=True)
 
     # Drop 小字(koaza) rows,
