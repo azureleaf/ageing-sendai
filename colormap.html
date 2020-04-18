@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>カラーマップ</title>
+</head>
+<body>
+  <h1>カラーマップ算出方法の検討</h1>
+
+  <ul>
+    <li>以下HTMLのsvgタグを使ってカラーマップを試行錯誤で生成し表示実験</li>
+    <li>
+      参考：<a href="https://matplotlib.org/tutorials/colors/colormaps.html"
+        >https://matplotlib.org/tutorials/colors/colormaps.html</a
+      >
+    </li>
+  </ul>
+
+  <h2>Autumn</h2>
+  <ul>
+    <li>単に黄色から赤色へ線形に変化</li>
+    <li>きれいではあるが、差が見えにくい</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="autumn" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: rgb(255, 255, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="100%"
+          style="stop-color: rgb(255, 0, 0); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#autumn)" />
+  </svg>
+
+  <h2>Hot</h2>
+  <ul>
+    <li>黒から#000 -> #f00 -> #ff0 -> #fffで白になる</li>
+    <li>薄い側が白くなってみづらい</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="hot" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: rgb(255, 255, 255); stop-opacity: 1;"
+        />
+        <stop
+          offset="33%"
+          style="stop-color: rgb(255, 255, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="66%"
+          style="stop-color: rgb(255, 0, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="100%"
+          style="stop-color: rgb(0, 0, 0); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#hot)" />
+  </svg>
+
+  <h2>Jet</h2>
+  <ul>
+    <li>見た目きれいではある</li>
+    <li>
+      <a
+        href="https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/"
+        >このリンク</a
+      >によるとJetは避けるべき
+    </li>
+    <li>
+      中間部分の印象が薄くなってしまう。両極端が強調されるが...これは許されない印象操作？
+    </li>
+    <li>あと青がやや長く見えてしまう</li>
+    <li>RGBを順繰りに変化させる（口では説明しにくいのでCSS定義を参照）</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="jet" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: rgb(0, 0, 127); stop-opacity: 1;"
+        />
+        <stop
+          offset="12.5%"
+          style="stop-color: rgb(0, 0, 255); stop-opacity: 1;"
+        />
+        <stop
+          offset="37.5%"
+          style="stop-color: rgb(0, 255, 255); stop-opacity: 1;"
+        />
+        <stop
+          offset="62.5%"
+          style="stop-color: rgb(255, 255, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="87.5%"
+          style="stop-color: rgb(255, 0, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="100%"
+          style="stop-color: rgb(127, 0, 0); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#jet)" />
+  </svg>
+
+  <h2>HSV</h2>
+  <ul>
+    <li>循環してしまうのが特徴であり、欠点</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="hsv" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: hsl(0, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="12.5%"
+          style="stop-color: hsl(45, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="25%"
+          style="stop-color: hsl(90, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="37.5%"
+          style="stop-color: hsl(135, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="50%"
+          style="stop-color: hsl(180, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="62.5%"
+          style="stop-color: hsl(225, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="75%"
+          style="stop-color: hsl(270, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="87.5%"
+          style="stop-color: hsl(315, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="100%"
+          style="stop-color: hsl(360, 100%, 50%); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#hsv)" />
+  </svg>
+
+  <h2>Hotの亜種（自作）</h2>
+  <ul>
+    <li>白を抜いた #ff0 -> #f00 -> #000</li>
+    <li>RGB３者が同程度に変化していないが...これでもOKなのか？対称性的に？</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="hot_variant" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: rgb(255, 255, 0); stop-opacity: 1;"
+        />
+        <stop
+          offset="50%"
+          style="stop-color: rgb(255, 0, 0); stop-opacity: 1;"
+        />
+        <stop
+        
+          offset="100%"
+          style="stop-color: rgb(0, 0, 0); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#hot_variant)" />
+  </svg>
+
+  <h2>HSVの亜種（自作）</h2>
+  <ul>
+    <li>循環する前に240度でとめる。これ以上増やすとRGBのRが増えていってしまい紛らわしくなるので</li>
+    <li>緑が長すぎる気がする</li>
+  </ul>
+  <svg width="1000" height="50">
+    <defs>
+      <linearGradient id="hsvish" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop
+          offset="0%"
+          style="stop-color: hsl(0, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="12.5%"
+          style="stop-color: hsl(30, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="25%"
+          style="stop-color: hsl(60, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="37.5%"
+          style="stop-color: hsl(90, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="50%"
+          style="stop-color: hsl(120, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="62.5%"
+          style="stop-color: hsl(150, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="75%"
+          style="stop-color: hsl(180, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="87.5%"
+          style="stop-color: hsl(210, 100%, 50%); stop-opacity: 1;"
+        />
+        <stop
+          offset="100%"
+          style="stop-color: hsl(240, 100%, 50%); stop-opacity: 1;"
+        />
+      </linearGradient>
+    </defs>
+    <rect width="1000" height="50" fill="url(#hsvish)" />
+  </svg>
+</body>

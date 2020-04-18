@@ -968,6 +968,8 @@ stats.columns.forEach((column, index) => {
 const renderMap = () => {
   // Instantiate Map object: set initial view position & zoom level
   var mymap = new L.Map("mapid").setView([38.2682, 140.8694], 14);
+
+  // Set tile layer
   var tile = L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
     attribution:
       '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
@@ -995,31 +997,61 @@ const renderMap = () => {
     return [r, g, b].reduce(reducer, "");
   };
 
+  const useRedCmap = (pc_value) => {
+    return "#" + rgbToHex(255, (100 - pc_value) * 2.55, (100 - pc_value) * 255);
+  };
+
+  const useHSVCmap = (pc_value) => {
+    // Cut-off for old population ratio
+    // e.g. 81%, 85%, 90%, 100% will be shown in the identical color
+    //     when the upper cutoff is 80%
+    // Strictly speaking, setting cut-off isn't scientific, tho
+    const [lowerCutoff, upperCutoff] = [0, 50]; // Set between 0-100%
+    if (pc_value > upperCutoff) pc_value = upperCutoff;
+    if (pc_value < lowerCutoff) pc_value = lowerCutoff;
+    const [hueMin, hueMax] = [0, 240]; // Set between 0-360 (deg)
+    const hue = (pc_value * (hueMax - hueMin)) / (upperCutoff - lowerCutoff);
+    return "hsl(" + hue + ", 100%, 50%)";
+  };
+
+  const useJetCmap = (pc_value) => {
+    const b = pc_value > 25 ? -10.2 * pc_value + 640 : 10.2 * pc_value + 128;
+    const g = pc_value > 50 ? -10.2 * pc_value + 896 : 10.2 * pc_value - 128;
+    const r = pc_value > 75 ? -10.2 * pc_value + 1148 : 10.2 * pc_value - 384;
+    return "#" + rgbToHex(r, g, b);
+  };
+
+  const useHotishCmap = (pc_value) => {
+    return "#" + rgbToHex(-5.1 * pc_value + 510, -5.1 * pc_value + 255, 0);
+  };
+
+  // Plot circles
   towns.forEach((town) => {
     // % of old age population
     pc_old = town[fields.pc_old];
 
-    // RGB vs HSL: Not sure if which color scheme is
-    // better for visualization
-    var color_rgb = "#" + rgbToHex(pc_old * 2.55, (100 - pc_old) * 2.55, 0);
+    const cmapSchema = "hsv";
+    let plotColor = undefined;
 
-    // Cut-off for old population ratio
-    // Set between 0-100 (%)
-    // e.g. 81%, 85%, 90%, 100% will be shown in the identical color
-    //     when the upper cutoff is 80%
-    const [lowerCutoff, upperCutoff] = [0, 50];
-    pc_old = pc_old > upperCutoff ? upperCutoff: pc_old;
-    pc_old = pc_old < lowerCutoff ? lowerCutoff: pc_old;
-
-    // Set between 0-360 (degrees)
-    var [hueMin, hueMax] = [0, 240];
-    var hue = (pc_old * (hueMax - hueMin)) / (upperCutoff - lowerCutoff);
-
-    const color_hsl = "hsl(" + hue + ", 100%, 50%)";
+    // Colormap: RGB vs HSL vs Hot-ish
+    switch (cmapSchema) {
+      case "hsv":
+        plotColor = useHSVCmap(pc_old);
+        break;
+      case "red":
+        plotColor = useRedCmap(pc_old);
+        break;
+      case "hotish":
+        plotColor = useHotishCmap(pc_old);
+        break;
+      case "jet":
+          plotColor = useJetCmap(pc_old);
+          break;
+    }
 
     const circle = L.circle([town[fields.lat], town[fields.lon]], {
       color: "gray", // stroke color
-      fillColor: color_hsl,
+      fillColor: plotColor,
       fillOpacity: 0.8,
       weight: 1, // stroke width
       radius: 100,
