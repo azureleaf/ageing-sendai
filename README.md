@@ -12,12 +12,13 @@
   - [Packages](#packages)
   - [Files](#files)
     - [`index.html`と `vis-map.js`](#indexhtml%e3%81%a8-vis-mapjs)
+    - [`colormap.html`](#colormaphtml)
     - [`age_structure.py`](#agestructurepy)
     - [`position.py`](#positionpy)
     - [`analyze.py`](#analyzepy)
     - [`town_shapes.py`](#townshapespy)
     - [`constants.py`](#constantspy)
-    - [`csv/`](#csv)
+    - [`results/`](#results)
     - [`raw/`](#raw)
   - [Discussion](#discussion)
     - [交通結節点と新興住宅地では高齢化率が低い](#%e4%ba%a4%e9%80%9a%e7%b5%90%e7%af%80%e7%82%b9%e3%81%a8%e6%96%b0%e8%88%88%e4%bd%8f%e5%ae%85%e5%9c%b0%e3%81%a7%e3%81%af%e9%ab%98%e9%bd%a2%e5%8c%96%e7%8e%87%e3%81%8c%e4%bd%8e%e3%81%84)
@@ -45,12 +46,14 @@
 1. Download public data files from the internet (See reference)
 2. Specify the paths of downloaded files in `constants.py`
 3. Install Python 3 and `pipenv`
-4. Install `Noto Sans CJK JP` font (or specify Japanese font in your computer at `constants.py`)
+4. Install `Noto Sans CJK JP` font
+   - Or, specify any of your available Japanese fonts at `constants.py`)
 5. `pipenv shell`
 6. `pipenv install`
 7. `mkdir csv`
-8. `python3 age_structure.py`: Generates CSV (configure with booleans)
-9. `python3 analyze.py`: Generates CSVs, JSON, and histogram (configure with booleans)
+8. `python3 analyze.py`
+   - Generates a CSV
+   - Configure bool flags to generate optional CSV / JSON / histogram fig
 
 ### Visualize Sendai towns with Matplotlib viewer
 
@@ -67,24 +70,37 @@
 
 ## Packages
 
-- `Pandas`
-- `Numpy`
-- `Matplotlib`
+- `pandas`
+- `numpy`
+- `matplotlib`
 - `xlrd`: Excel ファイルの読み込み
 - `myshp`: Shapefile の読み込み
-- `Leaflet.js`: 地図上へのプロット
+- `leaflet.js`: 地図上へのプロット
 
 ## Files
 
 ### `index.html`と `vis-map.js`
 
 - OpenStreetMap への高齢化情報のプロット
-- `vis-map.js`内部で以下の Python での統計処理結果を使っている
+- `vis-map.js`内部で以下の Python で出力されたデータを使っている
+- 老年人口比率（0%-100%）を HSL の色相（0 度-240 度）に置換して表示色を決定する
+- leaflet.js の Popup オブジェクトを使って詳細情報を表示する
+
+### `colormap.html`
+
+- 地図へプロットする際のカラーマッピングの検討に使ったファイル
+- カラーマップとして有名な「Hot」「Reds」「Autumn」「Jet」「HSV」を検討した
+- 結局、見やすさを考えて今回は「HSV」の一部を切り取った以下の配色パターンを使うことにした
+- 差をはっきりさせるため、老年人口比率にカットオフ値を設定した
+- カットオフにより色と老年人口比率の線形性が失われるので科学的にはあまり望ましくないが...今回は見やすさを優先した
+- データの見せ方は結構難しい。今後さらに要検討
+
+![HSV Variant](./img/hsv_0_240.png)
 
 ### `age_structure.py`
 
 - 仙台市の年齢別・町名別・性別人口データのエクセルファイルを処理する
-- 元データのエクセルファイルは区と性別ごとに複数シートにわかれてしまっているので集約する
+- 元データのエクセルファイルは区と性別ごとに複数のスプレッドシートにわかれてしまっているので集約する
 - 「大字」と「小字」で人口がダブルカウントされているため、大字に集約する
 - 例えば「種次字中屋敷」「種次字番古」「種次字南番古」「種次（大字計）」という行が連続しているので「種次」という大字名を記憶し、それを手がかりにして「種次字」で始まる地名の行を削除する
 - 列の見出しが日本語表記のままではデータ処理で扱いにくいので、英字の略号に変換
@@ -95,14 +111,14 @@
 - `age_structure.py`の出力結果である年齢別人口構成データを DataFrame A として取り込む
 - 仙台市の各町・丁・大字の代表点の GPS 座標データが入ったエクセルファイルを処理する。 データを整形して DataFrame B とする
 - 「丁目」の書式が年齢構成ファイルでは数字だが、位置情報ファイルでは漢数字になってしまっているので統一する
-- DataFrame A と DataFrame B を、町名と区名をキーにして JOIN する（町名だけをキーにすると失敗する。例えば青葉区と太白区両方に「茂庭」という地名があるため）
+- DataFrame A と DataFrame B を、町名と区名をキーにして JOIN する（町名だけをキーにすると失敗する。例えば青葉区と太白区両方に「茂庭」という町名があるため）
 - ここまでの集計結果（町別の人口三区分の人口構成と町の位置情報）を CSV として出力する
 
 ### `analyze.py`
 
 - `position.py`を内部で呼び出す
 - これを元に人口三区分（年少人口、生産年齢人口、老年人口）毎の人数・人口比を集計し、また高齢化率、従属人口比率、老年化指数、男女比も算出する
-- この集計結果をCSVまたはJSONに保存し、またヒストグラムにする
+- この集計結果を CSV または JSON に保存し、またヒストグラムにする
 
 ### `town_shapes.py`
 
@@ -114,13 +130,13 @@
 
 - 複数の Python モジュールで共用するデータ
 
-### `csv/`
+### `results/`
 
 - Python で出力される CSV ファイルの置き場（`.gitignore`済）
 
 ### `raw/`
 
-- ダウンロードしてきたエクセルファイルなどの置き場
+- ダウンロードしてきた元ファイルの置き場
 - データサイズが大きいため元ファイルは`.gitignore` している
 
 ## Discussion
@@ -129,27 +145,27 @@
 
 ### 交通結節点と新興住宅地では高齢化率が低い
 
-- 泉中央
-- 紫山
-- あすと長町
-- 富沢
-- 錦が丘：　年少人口が４０％程度で、仙台で一番こどもの割合が多い
-- 荒井
-- 仙台駅周辺
-- 新田東
-- 将監殿
+- 泉区泉中央
+- 泉区将監殿
+- 泉区紫山
+- 太白区あすと長町
+- 太白区富沢
+- 青葉区錦が丘：　年少人口が４０％程度で、仙台で一番こどもの割合が多い
+- 若林区荒井
+- 宮城野区仙台駅周辺
+- 宮城野区新田東
 
 ### 昭和中期に開発された住宅地や僻地では高齢化が進む
 
-- 加茂
-- 長命ケ丘
-- 高森
-- 松陵
-- 鶴ケ谷
-- 八木山西部
-- 茂庭台
-- 袋原
-- 沿岸部
+- 泉区加茂
+- 泉区長命ケ丘
+- 泉区高森
+- 泉区松陵
+- 泉区鶴ケ丘
+- 太白区人来田
+- 太白区茂庭台
+- 太白区袋原
+- 若林区沿岸部
 
 ### 特殊な施設がある町では独特な人口傾向が見られる
 
@@ -191,8 +207,8 @@
 
 ### 宮城県各市町村の町の GPS 座標情報（平成 30 年分）
 
-- 位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
-- このデータは仙台の各町の代表点の緯度経度を含む
+- 国交省位置参照情報ダウンロードサービス： http://nlftp.mlit.go.jp/cgi-bin/isj/dls/_choose_method.cgi
+- このデータは仙台の各町の代表点の緯度経度を含んでいる
 
 ### 町別の形状データ（世界測地系緯度経度・Shapefile：04 宮城県）
 
