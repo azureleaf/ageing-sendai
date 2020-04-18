@@ -6,11 +6,11 @@ import time
 import matplotlib.pyplot as plt
 
 
-def analyze_df(full_df):
+def analyze_df(age_pos_df):
     '''Analyze the population indicators of the df given
 
     Args:
-        full_df (Pandas.DataFrame)
+        age_pos_df (Pandas.DataFrame)
     Returns:
         Pandas.DataFrame
     '''
@@ -28,7 +28,7 @@ def analyze_df(full_df):
     }
     age_groups["old"].append("90+")
 
-    town_codes = list(full_df.town_code.unique())
+    town_codes = list(age_pos_df.town_code.unique())
 
     # Create dataframes for analysis result
     # Note: You can't calculate age average or age mean,
@@ -56,12 +56,12 @@ def analyze_df(full_df):
 
         # Total population of this down by gender
         # Get partial dataframe for this town
-        m_df = full_df.loc[
-            (full_df.town_code == town_code) &
-            (full_df.gender == "m")]
-        f_df = full_df.loc[
-            (full_df.town_code == town_code) &
-            (full_df.gender == "f")]
+        m_df = age_pos_df.loc[
+            (age_pos_df.town_code == town_code) &
+            (age_pos_df.gender == "m")]
+        f_df = age_pos_df.loc[
+            (age_pos_df.town_code == town_code) &
+            (age_pos_df.gender == "f")]
         m_pop = m_df.total_pop.values[0]  # total men
         f_pop = f_df.total_pop.values[0]  # total women
         row["gender_ratio"] = \
@@ -154,7 +154,7 @@ def main(save_csv=False, save_json=False, save_hist=False):
             force_ascii=False  # Output Japanese text as it is
         )
 
-    print("Done.\n===\nTime elapsed:", time.time() - start)
+    print("Done.\nTime elapsed:", time.time() - start)
 
 
 if __name__ == "__main__":
