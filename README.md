@@ -18,6 +18,7 @@
     - [`analyze.py`](#analyzepy)
     - [`town_shapes.py`](#townshapespy)
     - [`constants.py`](#constantspy)
+    - [`parser/parse.c`](#parserparsec)
     - [`results/`](#results)
     - [`raw/`](#raw)
   - [Discussion](#discussion)
@@ -129,6 +130,13 @@
 ### `constants.py`
 
 - 複数の Python モジュールで共用するデータ
+
+### `parser/parse.c`
+
+- 仙台市の小字の位置情報ファイルを処理する。元データが16万行もあるため、処理速度のためこのファイルのみC言語を選んだ
+- Shift-JISからUTF-8に変換し、宮城県全体から仙台市内の部分を抽出し、また特定の小字の行を抽出する機能を実装済み
+- 当初`strtok()`の挙動をよく理解していなかったので、作成時にちょっと詰まった
+- しかし、小字位置情報と年齢人口データの間でもデータの欠損などがあることがわかり、可視化プロジェクトには使えないことにあとで気づいた...
 
 ### `results/`
 
