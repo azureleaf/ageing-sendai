@@ -1,13 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <iconv.h>
+#include <stdlib.h>
 #include <unistd.h> // access()
 
-#define S_SIZE 1024    // Length of a line in the file
-#define V_SIZE 30      // Length of a value between commas
-#define ALL_F_NUM 14   // number of header fields: 都道府県名, 市区町村名...
-#define KEY_F_NUM 5    // number of key header fields: ward, oaza, koaza, lat, lon
-#define F_NAME_SIZE 30 // e.g. "住居表示フラグ" is 21 Bytes
+#define S_SIZE 1024      // Length of a line in the file
+#define V_SIZE 30        // Length of a value between commas
+#define FLD_NUM 14       // Number of header fields: 都道府県名, 市区町村名...
+#define FLD_NAME_SIZE 30 // Length of a field name. The longest "住居表示フラグ" has 23B
 
 // Position of fields in the source CSV header columns
 #define WARD 1
@@ -15,6 +15,24 @@
 #define KOAZA 3
 #define LAT 8
 #define LON 9
+
+typedef struct town
+{
+    char pref[FLD_NAME_SIZE];
+    char ward[FLD_NAME_SIZE];  // important
+    char oaza[FLD_NAME_SIZE];  // important
+    char koaza[FLD_NAME_SIZE]; // important
+    char lot[FLD_NAME_SIZE];
+    char coordSys[4];
+    char x[FLD_NAME_SIZE];
+    char y[FLD_NAME_SIZE];
+    char lat[FLD_NAME_SIZE]; // important
+    char lon[FLD_NAME_SIZE]; // important
+    char isNewAddrSys[3];
+    char isRep[3];
+    char isNotUpdated[3];
+    char isUpdated[3];
+} town_t;
 
 // File paths
 char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv"; // source
@@ -27,38 +45,44 @@ int filter_sendai_pos(void);
 int sjis2utf8(char *, char *);
 int has_expected_header(char *);
 int count_comma(char *, int, int);
-int split_by_commas(char *, char[ALL_F_NUM][V_SIZE]);
+int split_by_commas(char *, char[FLD_NUM][V_SIZE]);
 int calc_koaza_pos(void);
 int test_split_by_commas(void);
+int test_qsort(void);
+int cmp_func(const void *[], const void *[]);
 
 // Wrapper
 int main()
 {
     // test_split_by_commas();
 
-    // Check existance of UTF-8 file
+    // If UTF-8 file doesn't exist, generate it
     if (access(miyagi_utf8_path, F_OK) == -1)
         if (sjis2utf8(miyagi_sjis_path, miyagi_utf8_path))
             return 1;
 
-    filter_sendai_pos();
+    // If Sendai town position file doesn't exist, generate it
+    if (access(sendai_path, F_OK) == -1)
+        if (filter_sendai_pos())
+            return 1;
+
     calc_koaza_pos();
 
     return 0;
 }
 
-// Test function
+// Unit test
 int test_split_by_commas(void)
 {
     char teststr[] = "one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,thirteen,fourteen";
-    char result[ALL_F_NUM][V_SIZE];
+    char result[FLD_NUM][V_SIZE];
 
     printf("Original line before split: %s\n", teststr);
 
     split_by_commas(teststr, result);
     printf("Number of the result array elements: %ld\n", sizeof(result) / sizeof(result[0]));
     int i;
-    for (i = 0; i < ALL_F_NUM; ++i)
+    for (i = 0; i < FLD_NUM; ++i)
     {
         printf("Elem: %s\n", result[i]);
     }
@@ -69,16 +93,11 @@ int test_split_by_commas(void)
 }
 
 // Extract rows of Sendai towns from all the towns in Miyagi, then save it to the file
+// Miyagi 267k towns => Sendai 49k towns
 int filter_sendai_pos(void)
 {
     FILE *fi, *fo;
     char buff[S_SIZE];
-
-    if (access(sendai_path, F_OK) != -1)
-    {
-        printf("INFO: Skipped the file generation. (\"%s\" already exists)\n", sendai_path);
-        return 0;
-    }
 
     if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
     {
@@ -119,19 +138,19 @@ int calc_koaza_pos(void)
 {
     FILE *fi, *fo;
     char buff[S_SIZE];
-    char values[ALL_F_NUM][V_SIZE];
+    char values[FLD_NUM][V_SIZE];
     int row_i = 0;
     char keyword[] = "\"上愛子\"";
 
     if ((fi = fopen(sendai_path, "r")) == NULL)
     {
-        printf("ERROR: couldn't find the file: %s\n", sendai_path);
+        printf("ERROR: Couldn't find the src file: %s\n", sendai_path);
         return 1;
     }
 
     if ((fo = fopen(koaza_pos_path, "w")) == NULL)
     {
-        printf("ERROR: couldn't specify the output path: %s\n", koaza_pos_path);
+        printf("ERROR: Couldn't specify the dst path: %s\n", koaza_pos_path);
         return 1;
     }
 
@@ -141,13 +160,13 @@ int calc_koaza_pos(void)
         return 1;
     fputs(buff, fo);
 
-    while (fgets(buff, S_SIZE, fi) != NULL && row_i < 5)
+    while (fgets(buff, S_SIZE, fi) != NULL && row_i < 20)
     {
         // printf("buff: %s", buff);
         split_by_commas(buff, values);
-        printf("values: %s\n", values[OAZA]);
 
         if (strstr(values[OAZA], keyword) != NULL)
+            printf("values: %s\n", values[OAZA]);
             fputs(buff, fo);
 
         row_i++;
@@ -193,15 +212,14 @@ int sjis2utf8(char *sjis_path, char *utf8_path)
     fclose(fp_src);
     iconv_close(icd);
 
-    printf("INFO: Converted SHIFT-JIS file into UTF-8 as: %s\n", miyagi_utf8_path);
-
+    printf("INFO: Saved UTF-8 encoded file as: %s\n", miyagi_utf8_path);
     return 0;
 }
 
 // Check if the string passed includes the expected key fields
 int has_expected_header(char *s)
 {
-    char fields[ALL_F_NUM][F_NAME_SIZE];
+    char fields[FLD_NUM][FLD_NAME_SIZE];
 
     split_by_commas(s, fields);
 
@@ -228,13 +246,14 @@ int count_comma(char *text, int i, int count)
 }
 
 // Get a line, split it by comma, return it as an array
-int split_by_commas(char *s, char result[ALL_F_NUM][V_SIZE])
+// Using fscanf() instead of this function may be better
+int split_by_commas(char *s, char result[FLD_NUM][V_SIZE])
 {
     char *tp; // pointer to the token found
     int i = 0;
     char s_copy[S_SIZE];
 
-    // Copy the original string because "strtok" alter the source one
+    // Copy the original string because strtok() alters the source
     strcpy(s_copy, s);
 
     tp = strtok(s_copy, ",");
@@ -242,5 +261,29 @@ int split_by_commas(char *s, char result[ALL_F_NUM][V_SIZE])
     while ((tp = strtok(NULL, ",")) != NULL)
         strcpy(result[++i], tp);
 
+    return 0;
+}
+
+int test_qsort(void)
+{
+
+    // int arr[][2] = {{"uk", "44"}, {"japan", "81"}, {"india", "91"}};
+    // int i;
+    // // int arr_size = (int)sizeof(arr) / sizeof(arr[0]);
+    // int arr_size = 3;
+
+    // qsort(arr, arr_size, sizeof(arr[0]), cmp_func);
+
+    // for (i = 0; i < arr_size; i++)
+    // {
+    //     printf("%s ", arr[i]);
+    // }
+
+    return 0;
+}
+
+int cmp_func(const void *a[], const void *b[])
+{
+    // return *(int *)a[1] - *(int *)b[1];
     return 0;
 }
