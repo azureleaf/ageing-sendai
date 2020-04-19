@@ -9,86 +9,97 @@
 #define KEY_F_NUM 5    // number of key header fields: ward, oaza, koaza, lat, lon
 #define F_NAME_SIZE 30 // e.g. "住居表示フラグ" is 21 Bytes
 
-// Position of fields in the source CSV header
+// Position of fields in the source CSV header columns
 #define WARD 1
 #define OAZA 2
 #define KOAZA 3
 #define LAT 8
 #define LON 9
 
-char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv";
-char miyagi_utf8_path[] = "./miyagi_utf8.csv";
-char sendai_path[] = "./ages_parsed.csv";
+// File paths
+char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv"; // source
+char miyagi_utf8_path[] = "./miyagi_pos_utf8.csv";
+char sendai_path[] = "./sendai_pos.csv";
+char koaza_pos_path[] = "./koaza_pos.csv";
 
-int parse_miyagi_csv(void);
+// Prototypes
+int filter_sendai_pos(void);
 int sjis2utf8(char *, char *);
 int has_expected_header(char *);
 int count_comma(char *, int, int);
-int split(char *, char[ALL_F_NUM][V_SIZE]);
+int split_by_commas(char *, char[ALL_F_NUM][V_SIZE]);
+int calc_koaza_pos(void);
+int test_split_by_commas(void);
 
+// Wrapper
 int main()
 {
-    // char teststr[] = "one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve, thirteen, fourteen";
-    // char result[ALL_F_NUM][V_SIZE];
-    // split(teststr, result);
-    // printf("%ld", sizeof(result) / sizeof(result[0]));
-    // int i;
-    // for (i = 0; i < ALL_F_NUM; ++i)
-    // {
-    //     printf("%s", result[i]);
-    // }
-
-    // return 0;
+    // test_split_by_commas();
 
     // Check existance of UTF-8 file
     if (access(miyagi_utf8_path, F_OK) == -1)
         if (sjis2utf8(miyagi_sjis_path, miyagi_utf8_path))
             return 1;
 
-    if (!has_expected_header(miyagi_utf8_path))
-        return 1;
-    printf("Header format is successfully validated.");
+    filter_sendai_pos();
+    calc_koaza_pos();
 
     return 0;
 }
 
-int parse_miyagi_csv(void)
+// Test function
+int test_split_by_commas(void)
+{
+    char teststr[] = "one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,thirteen,fourteen";
+    char result[ALL_F_NUM][V_SIZE];
+
+    printf("Original line before split: %s\n", teststr);
+
+    split_by_commas(teststr, result);
+    printf("Number of the result array elements: %ld\n", sizeof(result) / sizeof(result[0]));
+    int i;
+    for (i = 0; i < ALL_F_NUM; ++i)
+    {
+        printf("Elem: %s\n", result[i]);
+    }
+
+    printf("Original line after split: %s\n", teststr);
+
+    return 0;
+}
+
+// Extract rows of Sendai towns from all the towns in Miyagi, then save it to the file
+int filter_sendai_pos(void)
 {
     FILE *fi, *fo;
     char buff[S_SIZE];
 
     if (access(sendai_path, F_OK) != -1)
     {
-        printf("INFO: The file \"%s\" already exists\n", sendai_path);
-        return 1;
+        printf("INFO: Skipped the file generation. (\"%s\" already exists)\n", sendai_path);
+        return 0;
     }
 
-    // If the source file doesn't exist, generate it
     if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
     {
-        sjis2utf8(miyagi_sjis_path, miyagi_utf8_path);
-
-        // When the even file generation fails, abort
-        if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
-        {
-            printf("ERROR: source file not found!");
-            return 1;
-        }
+        printf("ERROR: source file not found!");
+        return 1;
     };
 
     if ((fo = fopen(sendai_path, "w")) == NULL)
     {
-        printf("ERROR: couldn't specify the output file path!\n");
+        printf("ERROR: couldn't specify the output file path.\n");
         return 1;
     }
 
-    // Output the header
+    // Output the header if the header is the one expected
     fgets(buff, S_SIZE, fi);
+    if (!has_expected_header(buff))
+        return 1;
     fputs(buff, fo);
 
     // Filter the rows of towns in Sendai city
     char keyword[] = "仙台市";
-    char *result;
     while (fgets(buff, S_SIZE, fi) != NULL)
     {
         if (strstr(buff, keyword) != NULL)
@@ -98,12 +109,57 @@ int parse_miyagi_csv(void)
     fclose(fi);
     fclose(fo);
 
-    printf("INFO: Extracted Sendai towns as: %s\n", sendai_path);
+    printf("INFO: Saved Sendai towns as: %s\n", sendai_path);
 
     return 0;
 }
 
-// This function was stolen from JA Wikipedia
+// Calculate the central position coordinates of every Koaza
+int calc_koaza_pos(void)
+{
+    FILE *fi, *fo;
+    char buff[S_SIZE];
+    char values[ALL_F_NUM][V_SIZE];
+    int row_i = 0;
+    char keyword[] = "\"上愛子\"";
+
+    if ((fi = fopen(sendai_path, "r")) == NULL)
+    {
+        printf("ERROR: couldn't find the file: %s\n", sendai_path);
+        return 1;
+    }
+
+    if ((fo = fopen(koaza_pos_path, "w")) == NULL)
+    {
+        printf("ERROR: couldn't specify the output path: %s\n", koaza_pos_path);
+        return 1;
+    }
+
+    // Output the header if the header is the one expected
+    fgets(buff, S_SIZE, fi);
+    if (!has_expected_header(buff))
+        return 1;
+    fputs(buff, fo);
+
+    while (fgets(buff, S_SIZE, fi) != NULL && row_i < 5)
+    {
+        // printf("buff: %s", buff);
+        split_by_commas(buff, values);
+        printf("values: %s\n", values[OAZA]);
+
+        if (strstr(values[OAZA], keyword) != NULL)
+            fputs(buff, fo);
+
+        row_i++;
+    }
+
+    fclose(fi);
+    fclose(fo);
+
+    return 0;
+}
+
+// Get a Shift-JIS file, return it with UTF-8 encoding
 int sjis2utf8(char *sjis_path, char *utf8_path)
 {
     iconv_t icd;
@@ -142,30 +198,14 @@ int sjis2utf8(char *sjis_path, char *utf8_path)
     return 0;
 }
 
-int has_expected_header(char *csv_path)
+// Check if the string passed includes the expected key fields
+int has_expected_header(char *s)
 {
-    FILE *fi = fopen(csv_path, "r");
-    char header[S_SIZE];
     char fields[ALL_F_NUM][F_NAME_SIZE];
-    char *p; // pointer to the token found in the string
-    int i = 0;
 
-    if (fi == NULL)
-    {
-        printf("ERROR: CSV file not found!\n");
-        return 1;
-    }
+    split_by_commas(s, fields);
 
-    fgets(header, S_SIZE, fi);
-    p = strtok(header, ",");
-    strcpy(fields[i], p);
-
-    fclose(fi);
-
-    while ((p = strtok(NULL, ",")) != NULL)
-        strcpy(fields[++i], p);
-
-    // return 1 if all the field names are matched, if not return 0
+    // Return 1 if all the field names match, if not return 0
     return strcmp(fields[WARD], "\"市区町村名\"") ==
            strcmp(fields[OAZA], "\"大字・丁目名\"") ==
            strcmp(fields[KOAZA], "\"小字・通称名\"") ==
@@ -174,7 +214,6 @@ int has_expected_header(char *csv_path)
 }
 
 // Count the number of commas in the string given
-// This function isn't used
 int count_comma(char *text, int i, int count)
 {
     if (!text[i])
@@ -184,16 +223,21 @@ int count_comma(char *text, int i, int count)
         if (text[i] == ',')
             count++;
         i++;
-        count_comma(text, i, count);
+        count_comma(text, i, count); // recursion
     }
 }
 
-int split(char *s, char result[ALL_F_NUM][V_SIZE])
+// Get a line, split it by comma, return it as an array
+int split_by_commas(char *s, char result[ALL_F_NUM][V_SIZE])
 {
     char *tp; // pointer to the token found
     int i = 0;
+    char s_copy[S_SIZE];
 
-    tp = strtok(s, ",");
+    // Copy the original string because "strtok" alter the source one
+    strcpy(s_copy, s);
+
+    tp = strtok(s_copy, ",");
     strcpy(result[i], tp);
     while ((tp = strtok(NULL, ",")) != NULL)
         strcpy(result[++i], tp);
