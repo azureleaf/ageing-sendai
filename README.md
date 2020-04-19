@@ -5,9 +5,10 @@
 - [仙台高齢化地域の可視化](#%e4%bb%99%e5%8f%b0%e9%ab%98%e9%bd%a2%e5%8c%96%e5%9c%b0%e5%9f%9f%e3%81%ae%e5%8f%af%e8%a6%96%e5%8c%96)
   - [ToC](#toc)
   - [Usage](#usage)
-    - [Visualize Sendai ageing heat map](#visualize-sendai-ageing-heat-map)
-    - [Generate the files](#generate-the-files)
-    - [Visualize Sendai towns with Matplotlib viewer](#visualize-sendai-towns-with-matplotlib-viewer)
+    - [仙台高齢化ヒートマップの可視化手順](#%e4%bb%99%e5%8f%b0%e9%ab%98%e9%bd%a2%e5%8c%96%e3%83%92%e3%83%bc%e3%83%88%e3%83%9e%e3%83%83%e3%83%97%e3%81%ae%e5%8f%af%e8%a6%96%e5%8c%96%e6%89%8b%e9%a0%86)
+    - [必要ファイルの生成手順](#%e5%bf%85%e8%a6%81%e3%83%95%e3%82%a1%e3%82%a4%e3%83%ab%e3%81%ae%e7%94%9f%e6%88%90%e6%89%8b%e9%a0%86)
+    - [Matplotlib による仙台の各町境界の描画手順](#matplotlib-%e3%81%ab%e3%82%88%e3%82%8b%e4%bb%99%e5%8f%b0%e3%81%ae%e5%90%84%e7%94%ba%e5%a2%83%e7%95%8c%e3%81%ae%e6%8f%8f%e7%94%bb%e6%89%8b%e9%a0%86)
+    - [仙台市内の特定の小字の緯度経度情報の表示手順](#%e4%bb%99%e5%8f%b0%e5%b8%82%e5%86%85%e3%81%ae%e7%89%b9%e5%ae%9a%e3%81%ae%e5%b0%8f%e5%ad%97%e3%81%ae%e7%b7%af%e5%ba%a6%e7%b5%8c%e5%ba%a6%e6%83%85%e5%a0%b1%e3%81%ae%e8%a1%a8%e7%a4%ba%e6%89%8b%e9%a0%86)
   - [Purpose](#purpose)
   - [Packages](#packages)
   - [Files](#files)
@@ -18,7 +19,7 @@
     - [`analyze.py`](#analyzepy)
     - [`town_shapes.py`](#townshapespy)
     - [`constants.py`](#constantspy)
-    - [`parser/parse.c`](#parserparsec)
+    - [`parse.c`](#parsec)
     - [`results/`](#results)
     - [`raw/`](#raw)
   - [Discussion](#discussion)
@@ -35,14 +36,14 @@
 
 ## Usage
 
-### Visualize Sendai ageing heat map
+### 仙台高齢化ヒートマップの可視化手順
 
 1. [Open on GitHub](https://azureleaf.github.io/ageing-sendai) / Or open `index.html` locally with the browser
 
 - Screenshot:
   <br>![Heatmap Screenshot](./img/ageing_heatmap_screenshot.jpg)
 
-### Generate the files
+### 必要ファイルの生成手順
 
 1. Download public data files from the internet (See reference)
 2. Specify the paths of downloaded files in `constants.py`
@@ -56,13 +57,19 @@
    - Generates a CSV
    - Configure bool flags to generate optional CSV / JSON / histogram fig
 
-### Visualize Sendai towns with Matplotlib viewer
+### Matplotlib による仙台の各町境界の描画手順
 
 1. `python3 town_shape.py`
 
 - 形状頂点データを元にすべての町を描画した結果は以下の通り
 - 色分けは境界を明示する以外の意味はありません
   <br>![Sendai Town Shapes](./img/sendai_towns.png)
+
+### 仙台市内の特定の小字の緯度経度情報の表示手順
+
+1. Specify the name of the ward, oaza(大字), and koaza(小字) in the `parse.c`
+2. Compile: `gcc -o parse parse.c` with GCC, for example
+3. Run: `./parse` on Linux, for example
 
 ## Purpose
 
@@ -131,10 +138,10 @@
 
 - 複数の Python モジュールで共用するデータ
 
-### `parser/parse.c`
+### `parse.c`
 
-- 仙台市の小字の位置情報ファイルを処理する。元データが16万行もあるため、処理速度のためこのファイルのみC言語を選んだ
-- Shift-JISからUTF-8に変換し、宮城県全体から仙台市内の部分を抽出し、また特定の小字の行を抽出する機能を実装済み
+- 仙台市の小字の位置情報ファイルを処理する。元データが 16 万行もあるため、処理速度のためこのファイルのみ C 言語を選んだ
+- Shift-JIS から UTF-8 に変換し、宮城県全体から仙台市内の部分を抽出し、また特定の小字の行を抽出する機能を実装済み
 - 当初`strtok()`の挙動をよく理解していなかったので、作成時にちょっと詰まった
 - しかし、小字位置情報と年齢人口データの間でもデータの欠損などがあることがわかり、可視化プロジェクトには使えないことにあとで気づいた...
 
