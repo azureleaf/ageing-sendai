@@ -36,9 +36,8 @@ typedef struct town
 
 // File paths
 char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv"; // source
-char miyagi_utf8_path[] = "./miyagi_pos_utf8.csv";
-char sendai_path[] = "./sendai_pos.csv";
-char koaza_pos_path[] = "./koaza_pos.csv";
+char miyagi_utf8_path[] = "../results/miyagi_pos_utf8.csv";
+char koaza_pos_path[] = "../results/koaza_pos.csv";
 
 // Prototypes
 int filter_sendai_pos(void);
@@ -46,27 +45,23 @@ int sjis2utf8(char *, char *);
 int has_expected_header(char *);
 int count_comma(char *, int, int);
 int split_by_commas(char *, char[FLD_NUM][V_SIZE]);
-int calc_koaza_pos(void);
+int filter_koaza(char[V_SIZE], char[V_SIZE], char[V_SIZE]);
 int test_split_by_commas(void);
-int test_qsort(void);
-int cmp_func(const void *[], const void *[]);
 
 // Wrapper
 int main()
 {
-    // test_split_by_commas();
-
     // If UTF-8 file doesn't exist, generate it
     if (access(miyagi_utf8_path, F_OK) == -1)
         if (sjis2utf8(miyagi_sjis_path, miyagi_utf8_path))
             return 1;
 
     // If Sendai town position file doesn't exist, generate it
-    if (access(sendai_path, F_OK) == -1)
+    if (access(koaza_pos_path, F_OK) == -1)
         if (filter_sendai_pos())
             return 1;
 
-    calc_koaza_pos();
+    filter_koaza("\"仙台市青葉区\"", "\"芋沢\"", "\"畑前\"");
 
     return 0;
 }
@@ -98,6 +93,7 @@ int filter_sendai_pos(void)
 {
     FILE *fi, *fo;
     char buff[S_SIZE];
+    char values[FLD_NUM][V_SIZE];
 
     if ((fi = fopen(miyagi_utf8_path, "r")) == NULL)
     {
@@ -105,11 +101,8 @@ int filter_sendai_pos(void)
         return 1;
     };
 
-    if ((fo = fopen(sendai_path, "w")) == NULL)
-    {
-        printf("ERROR: couldn't specify the output file path.\n");
-        return 1;
-    }
+    // Overwrite if dst file already exists
+    fo = fopen(koaza_pos_path, "w");
 
     // Output the header if the header is the one expected
     fgets(buff, S_SIZE, fi);
@@ -118,39 +111,32 @@ int filter_sendai_pos(void)
     fputs(buff, fo);
 
     // Filter the rows of towns in Sendai city
-    char keyword[] = "仙台市";
     while (fgets(buff, S_SIZE, fi) != NULL)
     {
-        if (strstr(buff, keyword) != NULL)
+        split_by_commas(buff, values);
+        if (strstr(values[WARD], "仙台市") != NULL)
             fputs(buff, fo);
     }
 
     fclose(fi);
     fclose(fo);
 
-    printf("INFO: Saved Sendai towns as: %s\n", sendai_path);
+    printf("INFO: Saved Sendai towns as: %s\n", koaza_pos_path);
 
     return 0;
 }
 
-// Calculate the central position coordinates of every Koaza
-int calc_koaza_pos(void)
+// Filter the specified koaza and show it on the console
+int filter_koaza(char ward[V_SIZE], char oaza[V_SIZE], char koaza[V_SIZE])
 {
-    FILE *fi, *fo;
+    FILE *fi;
     char buff[S_SIZE];
     char values[FLD_NUM][V_SIZE];
     int row_i = 0;
-    char keyword[] = "\"上愛子\"";
 
-    if ((fi = fopen(sendai_path, "r")) == NULL)
+    if ((fi = fopen(koaza_pos_path, "r")) == NULL)
     {
-        printf("ERROR: Couldn't find the src file: %s\n", sendai_path);
-        return 1;
-    }
-
-    if ((fo = fopen(koaza_pos_path, "w")) == NULL)
-    {
-        printf("ERROR: Couldn't specify the dst path: %s\n", koaza_pos_path);
+        printf("ERROR: Couldn't find the src file: %s\n", koaza_pos_path);
         return 1;
     }
 
@@ -158,22 +144,21 @@ int calc_koaza_pos(void)
     fgets(buff, S_SIZE, fi);
     if (!has_expected_header(buff))
         return 1;
-    fputs(buff, fo);
+    row_i++;
 
-    while (fgets(buff, S_SIZE, fi) != NULL && row_i < 20)
+    while (fgets(buff, S_SIZE, fi) != NULL)
     {
         // printf("buff: %s", buff);
         split_by_commas(buff, values);
 
-        if (strstr(values[OAZA], keyword) != NULL)
-            printf("values: %s\n", values[OAZA]);
-            fputs(buff, fo);
-
+        if (strcmp(values[WARD], ward) == 0 &&
+            strcmp(values[OAZA], oaza) == 0 &&
+            strcmp(values[KOAZA], koaza) == 0)
+            printf("%d: %s", row_i, buff);
         row_i++;
     }
 
     fclose(fi);
-    fclose(fo);
 
     return 0;
 }
@@ -261,29 +246,5 @@ int split_by_commas(char *s, char result[FLD_NUM][V_SIZE])
     while ((tp = strtok(NULL, ",")) != NULL)
         strcpy(result[++i], tp);
 
-    return 0;
-}
-
-int test_qsort(void)
-{
-
-    // int arr[][2] = {{"uk", "44"}, {"japan", "81"}, {"india", "91"}};
-    // int i;
-    // // int arr_size = (int)sizeof(arr) / sizeof(arr[0]);
-    // int arr_size = 3;
-
-    // qsort(arr, arr_size, sizeof(arr[0]), cmp_func);
-
-    // for (i = 0; i < arr_size; i++)
-    // {
-    //     printf("%s ", arr[i]);
-    // }
-
-    return 0;
-}
-
-int cmp_func(const void *a[], const void *b[])
-{
-    // return *(int *)a[1] - *(int *)b[1];
     return 0;
 }
