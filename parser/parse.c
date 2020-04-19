@@ -66,27 +66,6 @@ int main()
     return 0;
 }
 
-// Unit test
-int test_split_by_commas(void)
-{
-    char teststr[] = "one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,thirteen,fourteen";
-    char result[FLD_NUM][V_SIZE];
-
-    printf("Original line before split: %s\n", teststr);
-
-    split_by_commas(teststr, result);
-    printf("Number of the result array elements: %ld\n", sizeof(result) / sizeof(result[0]));
-    int i;
-    for (i = 0; i < FLD_NUM; ++i)
-    {
-        printf("Elem: %s\n", result[i]);
-    }
-
-    printf("Original line after split: %s\n", teststr);
-
-    return 0;
-}
-
 // Extract rows of Sendai towns from all the towns in Miyagi, then save it to the file
 // Miyagi 267k towns => Sendai 49k towns
 int filter_sendai_pos(void)
@@ -245,6 +224,27 @@ int split_by_commas(char *s, char result[FLD_NUM][V_SIZE])
     strcpy(result[i], tp);
     while ((tp = strtok(NULL, ",")) != NULL)
         strcpy(result[++i], tp);
+
+    return 0;
+}
+
+// Unit test
+int test_split_by_commas(void)
+{
+    char teststr[] = "one,two,three,four,five,six,seven,eight,nine,ten,eleven,twelve,thirteen,fourteen";
+    char result[FLD_NUM][V_SIZE];
+
+    printf("Original line before split: %s\n", teststr);
+
+    split_by_commas(teststr, result);
+    printf("Number of the result array elements: %ld\n", sizeof(result) / sizeof(result[0]));
+    int i;
+    for (i = 0; i < FLD_NUM; ++i)
+    {
+        printf("Elem: %s\n", result[i]);
+    }
+
+    printf("Original line after split: %s\n", teststr);
 
     return 0;
 }
