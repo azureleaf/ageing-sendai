@@ -35,9 +35,9 @@ typedef struct town
 } town_t;
 
 // File paths
-char miyagi_sjis_path[] = "../raw/koaza-positions/04_2018.csv"; // source
-char miyagi_utf8_path[] = "../results/miyagi_pos_utf8.csv";
-char koaza_pos_path[] = "../results/koaza_pos.csv";
+char miyagi_sjis_path[] = "./raw/koaza-positions/04_2018.csv"; // source
+char miyagi_utf8_path[] = "./results/miyagi_pos_utf8.csv";
+char koaza_pos_path[] = "./results/koaza_pos.csv";
 
 // Prototypes
 int filter_sendai_pos(void);
