@@ -1,5 +1,9 @@
 # 仙台高齢化地域の可視化
 
+- Python, JavaScript, C言語を使って公共データを処理し、仙台の高齢化地域をブラウザ上で閲覧できるようにする。
+- 私が住んでいる仙台のGIS（地理情報システム）データに興味があったのが動機。
+- コロナウイルスでデータ可視化に注目が集まる今日この頃に、Python や JavaScript のデータ処理ツールに慣れたかった。
+  
 ## ToC
 
 - [仙台高齢化地域の可視化](#%e4%bb%99%e5%8f%b0%e9%ab%98%e9%bd%a2%e5%8c%96%e5%9c%b0%e5%9f%9f%e3%81%ae%e5%8f%af%e8%a6%96%e5%8c%96)
@@ -9,7 +13,6 @@
     - [必要ファイルの生成手順](#%e5%bf%85%e8%a6%81%e3%83%95%e3%82%a1%e3%82%a4%e3%83%ab%e3%81%ae%e7%94%9f%e6%88%90%e6%89%8b%e9%a0%86)
     - [Matplotlib による仙台の各町境界の描画手順](#matplotlib-%e3%81%ab%e3%82%88%e3%82%8b%e4%bb%99%e5%8f%b0%e3%81%ae%e5%90%84%e7%94%ba%e5%a2%83%e7%95%8c%e3%81%ae%e6%8f%8f%e7%94%bb%e6%89%8b%e9%a0%86)
     - [仙台市内の特定の小字の緯度経度情報の表示手順](#%e4%bb%99%e5%8f%b0%e5%b8%82%e5%86%85%e3%81%ae%e7%89%b9%e5%ae%9a%e3%81%ae%e5%b0%8f%e5%ad%97%e3%81%ae%e7%b7%af%e5%ba%a6%e7%b5%8c%e5%ba%a6%e6%83%85%e5%a0%b1%e3%81%ae%e8%a1%a8%e7%a4%ba%e6%89%8b%e9%a0%86)
-  - [Purpose](#purpose)
   - [Packages](#packages)
   - [Files](#files)
     - [`vis-map.js`と`index.html` (実際のページを開く)](#vis-mapjs%e3%81%a8indexhtml-%e5%ae%9f%e9%9a%9b%e3%81%ae%e3%83%9a%e3%83%bc%e3%82%b8%e3%82%92%e9%96%8b%e3%81%8f)
@@ -63,18 +66,14 @@
 
 - 形状頂点データを元にすべての町を描画した結果は以下の通り
 - 色分けは境界を明示する以外の意味はありません
+- よく見ると、「穴が空いた形状の町」では余計な線が描画されてしまっている。Matplotlibで`Polygon`ではなく`Path`を使うと解決するかも？
   <br>![Sendai Town Shapes](./img/sendai_towns.png)
 
 ### 仙台市内の特定の小字の緯度経度情報の表示手順
 
 1. Specify the name of the ward, oaza(大字), and koaza(小字) in the `parse.c`
-2. Compile: `gcc -o parse parse.c` with GCC, for example
+2. Compile: `clang -o parse parse.c` with Clang, for example
 3. Run: `./parse` on Linux, for example
-
-## Purpose
-
-- 仙台の高齢化地域に興味があった
-- コロナウイルスでデータ可視化に注目が集まる今日この頃に、Python や JavaScript のデータ処理ツールに慣れたかった
 
 ## Packages
 
@@ -99,7 +98,7 @@
 - 地図へプロットする際のカラーマッピングの検討に使ったファイル
 - カラーマップとして有名な「Hot」「Reds」「Autumn」「Jet」「HSV」を検討した
 - 結局、見やすさを考えて今回は「HSV」の一部を切り取った以下の配色パターンを使うことにした
-- 差をはっきりさせるため、老年人口比率にカットオフ値を設定した
+- 差をはっきりさせるため、老年人口比率に上限のカットオフ値を設定した
 - カットオフにより色と老年人口比率の線形性が失われるので科学的にはあまり望ましくないが...今回は見やすさを優先した
 - データの見せ方は結構難しい。今後さらに要検討
 

@@ -3,15 +3,25 @@
   <meta charset="utf-8" />
   <title>カラーマップ</title>
 </head>
-<body>
-  <h1>カラーマップ算出方法の検討</h1>
+<body style="width: 1000px; margin: 0 auto;">
+  <h1 style="text-align: center;">カラーマップ算出方法の検討</h1>
 
   <ul>
-    <li>以下HTMLのsvgタグを使ってカラーマップを試行錯誤で生成し表示実験</li>
+    <li>地図へプロットする際のカラーマッピングを検討する</li>
+    <li>以下、HTMLのsvgタグを使ってカラーマップを試行錯誤で生成し表示実験</li>
+    <li>
+      参考：
+      <a
+        href="https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/"
+        >https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/</a
+      >
+      ：Jetカラーマップを使うべきでないという主張
+    </li>
     <li>
       参考：<a href="https://matplotlib.org/tutorials/colors/colormaps.html"
         >https://matplotlib.org/tutorials/colors/colormaps.html</a
       >
+      ：Matplotlibでのカラーマップ名称一覧
     </li>
   </ul>
 
@@ -69,16 +79,12 @@
   <ul>
     <li>見た目きれいではある</li>
     <li>
-      <a
-        href="https://jakevdp.github.io/blog/2014/10/16/how-bad-is-your-colormap/"
-        >このリンク</a
-      >によるとJetは避けるべき
-    </li>
-    <li>
       中間部分の印象が薄くなってしまう。両極端が強調されるが...これは許されない印象操作？
     </li>
-    <li>あと青がやや長く見えてしまう</li>
-    <li>RGBを順繰りに変化させる（口では説明しにくいのでCSS定義を参照）</li>
+    <li>あと青が長く見えてしまう</li>
+    <li>
+      12.5%刻みでRGBを順繰りに変化させる。（定義はこのHTMLファイルのソースを参照してください）
+    </li>
   </ul>
   <svg width="1000" height="50">
     <defs>
@@ -115,6 +121,9 @@
   <h2>HSV</h2>
   <ul>
     <li>循環してしまうのが特徴であり、欠点</li>
+    <li>
+      HTMLはHSLのグラデーションに対応していないので、以下は擬似的なもの。（中間はRGBを使って補完されてしまっている）
+    </li>
   </ul>
   <svg width="1000" height="50">
     <defs>
@@ -177,7 +186,6 @@
           style="stop-color: rgb(255, 0, 0); stop-opacity: 1;"
         />
         <stop
-        
           offset="100%"
           style="stop-color: rgb(0, 0, 0); stop-opacity: 1;"
         />
@@ -188,7 +196,9 @@
 
   <h2>HSVの亜種（自作）</h2>
   <ul>
-    <li>循環する前に240度でとめる。これ以上増やすとRGBのRが増えていってしまい紛らわしくなるので</li>
+    <li>
+      色相が循環する前に240度でとめる。これ以上増やすとRGBのRが増えていってしまい紛らわしくなるので
+    </li>
     <li>緑が長すぎる気がする</li>
   </ul>
   <svg width="1000" height="50">
