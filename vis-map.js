@@ -55,7 +55,7 @@ const renderMap = () => {
     if (pc_value > upperCutoff) pc_value = upperCutoff;
     if (pc_value < lowerCutoff) pc_value = lowerCutoff;
     const [hueMin, hueMax] = [0, 240]; // Set between 0-360 (deg)
-    const hue = (pc_value * (hueMax - hueMin)) / (upperCutoff - lowerCutoff);
+    const hue = hueMax - (pc_value * (hueMax - hueMin)) / (upperCutoff - lowerCutoff);
     return "hsl(" + hue + ", 100%, 50%)";
   };
 
