@@ -21,15 +21,25 @@
     href="https://fonts.googleapis.com/css?family=Noto+Serif+JP:600&display=swap&subset=japanese"
     rel="stylesheet"
   />
+  <style>
+    a#desc,
+    a#desc:link,
+    a#desc:visited,
+    a#desc:hover,
+    a#desc:active {
+      color: white;
+    }
+  </style>
   <title>仙台高齢化地域可視化</title>
 </head>
-<body>
-  <div id="app" style="font-family: 'Noto Serif JP', serif">
-    <h1 style="font-size: 150%;"">
+<body style="background-color: black; color: white;">
+  <div id="app" style="font-family: 'Noto Serif JP', serif;">
+    <h1 style="font-size: 150%;">
       仙台の高齢化地域を可視化する
     </h1>
     <p>
-      ※寒色の青に近いほど高齢化率が高く、暖色の赤に近いほど低い地域になります。円をクリックすると詳細情報を表示します。GitHub：<a
+      寒色（青）に近いほど高齢者が多く、暖色（赤）に近いほど高齢者が少ない地域です。円をクリックすると詳細を表示します。　GitHub：<a
+        id="desc"
         href="https://github.com/azureleaf/ageing-sendai"
         >ageing-sendai@azureleaf</a
       >
