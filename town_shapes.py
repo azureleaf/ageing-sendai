@@ -12,8 +12,14 @@ import constants
 
 def read_shapefile(sf):
     """
-    Read a shapefile into a Pandas dataframe with a 'coords'
-    column holding the geometry information.
+    Read a shapefile as a dataframe.
+
+    params:
+        sf (shapefile):
+            A shapefile of Miyagi prefecture.
+    returns:
+        (Pandas dataframe):
+            'coords' column holds the geometry information.
     """
 
     fields = [x[0] for x in sf.fields][1:]
@@ -23,7 +29,7 @@ def read_shapefile(sf):
 
     # assign(): Append a new column or update the existing column
     # Dataframe can hold 2D matrix only, therefore
-    #   a list put into a cell are implicitly stringified
+    #   a list in a cell will be implicitly stringified
     # e.g. [1, 2, 3] => "[1, 2, 3]"
     df = df.assign(POINTS=shps)
     return df
@@ -31,7 +37,8 @@ def read_shapefile(sf):
 
 def get_bounding_box(polygons):
     '''
-    Find the corners of the bounding box of the points given
+    Find the corners of the bounding box
+    of the multiple points given.
 
     params:
         polygons (3D array):
@@ -55,7 +62,7 @@ def get_bounding_box(polygons):
 
 def plot_map_df(df, show_town_label=False):
     """
-    Plots all the town shapes in the dataframe passed
+    Plot all the town shapes in the dataframe passed
 
     params:
         df (Pandas.DataFrame):
@@ -96,7 +103,18 @@ def plot_map_df(df, show_town_label=False):
 
 
 def plot_shape_sf(sf, id, s=None):
-    """ PLOTS A SINGLE SHAPE """
+    """ 
+    Plot a single polygon in the shapefile
+
+    params:
+        sf (shapefile):
+            shapefile which contains multiple polygons
+        id (int):
+            ID of the polygon to be plotted
+        s ()
+            wtf is this?
+    """
+
     # Plot figure
     plt.figure()
 
@@ -127,7 +145,7 @@ def plot_shape_sf(sf, id, s=None):
     # Plot polygon based on
     plt.plot(x_lon, y_lat)
 
-    # Centroid-ish point of the shape
+    # Show the text on the centroid point of the shape
     x0 = np.mean(x_lon)
     y0 = np.mean(y_lat)
     plt.text(x0, y0, "Town", fontsize=10)
@@ -140,11 +158,13 @@ def plot_shape_sf(sf, id, s=None):
 
     plt.show()
 
-    return x0, y0
+    # return x0, y0
 
 
 def trim_shape_df(df):
-    '''Remove the unnecessary columnss from the dataframe'''
+    '''
+    Remove the unnecessary columnss from the dataframe
+    '''
 
     # Extract the necessary columns
     df = df[[
@@ -161,7 +181,17 @@ def trim_shape_df(df):
 
 
 def join_dfs(age_stat_df, shape_df):
-    '''Merge 2 dataframes'''
+    '''
+    Merge 2 dataframes into 1.
+
+    params:
+        age_stat_df (Pandas dataframe)
+        shape_df (Pandas dataframe)
+    returns:
+        (Pandas dataframe): merged df
+    '''
+
+    # Cast the data type of the town code column
     shape_df = shape_df.astype({'KEY_CODE': 'int64'})
 
     merged_df = pd.merge(left=age_stat_df,
