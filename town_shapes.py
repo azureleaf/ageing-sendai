@@ -220,11 +220,9 @@ def visualize_map(
 
     df = read_shapefile(sf)
 
-    # Extract the Sendai city data only
-    df = df[df.GST_NAME == '仙台市']
-
     if output_shapes_csv is True:
         # Save equivalent of the entire shapefile in CSV format
+        # Because the shapefile can't be opened as a text file
         df.to_csv(constants.file_paths["SHAPE_CSV"],
                   mode="w",
                   index=True,
@@ -238,6 +236,6 @@ def visualize_map(
 
 if __name__ == "__main__":
     visualize_map(
-        output_shapes_csv=False,
-        show_town_label=True,
+        output_shapes_csv=True,
+        show_town_label=False,
     )
