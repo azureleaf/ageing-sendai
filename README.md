@@ -62,7 +62,9 @@
 
 1. Install `Noto Sans CJK JP` font
    - Or, specify any Japanese font available on your PC at `constants.py`)
-1. `python3 town_shape.py`
+1. Install `python3-tk` locally
+   - e.g. `sudo apt-get install python3-tk`
+2. `python3 town_shape.py`
 
 - 形状頂点データを元にすべての町を描画した結果は以下の通り。
 - 色分けは境界を明示する以外の意味はありません。
