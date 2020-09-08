@@ -14,6 +14,7 @@ pyshp = "*"
 matplotlib = "*"
 seaborn = "*"
 geocoder = "*"
+cython = "*"
 
 [requires]
 python_version = "3.8"
