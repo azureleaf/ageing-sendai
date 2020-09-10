@@ -1,9 +1,13 @@
 import os
 import re
 import subprocess
+import pandas as pd
 
 sample_addr = "仙台市泉区泉中央二丁目1-12345"
-# sample_addr = "あいうえお"
+
+# Path to the CSV path
+csv_path = os.path.join("..", "raw", "facilities.csv")
+
 
 # Path to the DAMS exec file built on the local env
 dams_path = os.environ.get('DAMS')
@@ -22,6 +26,8 @@ def get_dams_output(addr):
 def parse_dams_output(dams_output=""):
     '''Parse the multi-line string into the accessible dict'''
 
+    # Note: With Python, you can't use the variable as a dictionary key
+    # Therefore create the tuple version first, then convert it into the dict
     info = []
     addr_parts = []
 
@@ -50,5 +56,18 @@ def parse_dams_output(dams_output=""):
     return info_dict
 
 
-info = parse_dams_output(get_dams_output(sample_addr))
-print(info)
+def csv2df(csv_path):
+    try:
+        df = pd.read_csv(csv_path)
+    except FileNotFoundError:
+        print("CSV file not found! Maybe the file name is incorrect.")
+        return 1
+
+    return df
+
+
+if __name__ == "__main__":
+    info = parse_dams_output(get_dams_output(sample_addr))
+    print(info)
+
+    csv2df(csv_path)
