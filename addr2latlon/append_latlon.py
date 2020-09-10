@@ -3,9 +3,10 @@ import re
 import subprocess
 import unittest
 import pandas as pd
+import numpy as np
 
 # Path to the CSV path
-csv_path = os.path.join("..", "raw", "facilities.csv")
+facilities_csv_path = os.path.join("..", "raw", "facilities.csv")
 
 # Path to the DAMS exec file built on the local env
 dams_path = os.environ.get('DAMS')
@@ -64,6 +65,19 @@ def csv2df(csv_path):
     return df
 
 
+def append_latlon(csv_path):
+
+    df = csv2df(csv_path)
+    addrs = df["address"]
+
+    for i, addr in addrs.items():
+        if addr is not np.nan:
+
+            output = get_dams_output(addr)
+            coord = parse_dams_output(output)["address_parts"]
+            print(addr, coord)
+
+
 class TestParsing(unittest.TestCase):
     def test_parsing(self):
         test_addr = "仙台市泉区泉中央二丁目1-12345"
@@ -74,6 +88,8 @@ class TestParsing(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    # unittest.main()
 
     # csv2df(csv_path)
+
+    append_latlon(facilities_csv_path)
