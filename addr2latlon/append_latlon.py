@@ -1,13 +1,11 @@
 import os
 import re
 import subprocess
+import unittest
 import pandas as pd
-
-sample_addr = "仙台市泉区泉中央二丁目1-12345"
 
 # Path to the CSV path
 csv_path = os.path.join("..", "raw", "facilities.csv")
-
 
 # Path to the DAMS exec file built on the local env
 dams_path = os.environ.get('DAMS')
@@ -66,8 +64,16 @@ def csv2df(csv_path):
     return df
 
 
-if __name__ == "__main__":
-    info = parse_dams_output(get_dams_output(sample_addr))
-    print(info)
+class TestParsing(unittest.TestCase):
+    def test_parsing(self):
+        test_addr = "仙台市泉区泉中央二丁目1-12345"
+        info = parse_dams_output(get_dams_output(test_addr))
+        expected = str(7)
+        actual = info["address_parts"][-1]["level"]
+        self.assertEqual(expected, actual)
 
-    csv2df(csv_path)
+
+if __name__ == "__main__":
+    unittest.main()
+
+    # csv2df(csv_path)
