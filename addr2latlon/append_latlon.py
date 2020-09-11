@@ -7,6 +7,7 @@ import numpy as np
 
 # Path to the CSV path
 facilities_csv_path = os.path.join("..", "raw", "facilities.csv")
+output_csv_path = os.path.join("..", "results", "facilities_w_latlon.csv")
 
 # Path to the DAMS exec file built on the local env
 dams_path = os.environ.get('DAMS')
@@ -36,7 +37,8 @@ def parse_dams_output(dams_output=""):
         line = line.replace(" ", "")
 
         if re.match(r"(^tail=)|(^score=)", line):
-            p = re.search(r"(.+)=(.+)", line)
+            # Note that value may be empty for "tail="
+            p = re.search(r"(.+)=(.*)", line)
             info.append(tuple([p.group(1), p.group(2)]))
 
         if re.match(r"^name=", line):
@@ -70,12 +72,25 @@ def append_latlon(csv_path):
     df = csv2df(csv_path)
     addrs = df["address"]
 
+    lat = pd.Series([], dtype="float64")
+    lon = pd.Series([], dtype="float64")
+    tail = pd.Series([], dtype="string")
+
     for i, addr in addrs.items():
         if addr is not np.nan:
 
             output = get_dams_output(addr)
+
             coord = parse_dams_output(output)["address_parts"]
-            print(addr, coord)
+            lat[i] = float(coord[-1]["y"])
+            lon[i] = float(coord[-1]["x"])
+            tail[i] = parse_dams_output(output)["tail"]
+
+    df["lat"] = lat
+    df["lon"] = lon
+    df["tail"] = tail
+
+    df.to_csv(output_csv_path, index=True)
 
 
 class TestParsing(unittest.TestCase):
@@ -89,7 +104,5 @@ class TestParsing(unittest.TestCase):
 
 if __name__ == "__main__":
     # unittest.main()
-
-    # csv2df(csv_path)
 
     append_latlon(facilities_csv_path)
