@@ -1,3 +1,8 @@
+'''
+Read the CSV which has a column of addresses,
+then append the columns of latitude & longitude for them
+'''
+
 import os
 import re
 import subprocess
@@ -58,6 +63,8 @@ def parse_dams_output(dams_output=""):
 
 
 def csv2df(csv_path):
+    '''Read the CSV supplied, return the Pandas dataframe for it'''
+
     try:
         df = pd.read_csv(csv_path)
     except FileNotFoundError:
@@ -68,6 +75,9 @@ def csv2df(csv_path):
 
 
 def append_latlon(csv_path):
+    '''
+    Wrapper function to read the CSV,
+    append coordinates, save it to another CSV'''
 
     df = csv2df(csv_path)
     addrs = df["address"]
@@ -95,6 +105,8 @@ def append_latlon(csv_path):
 
 class TestParsing(unittest.TestCase):
     def test_parsing(self):
+        '''Run the local DAMS, parse the result output'''
+
         test_addr = "仙台市泉区泉中央二丁目1-12345"
         info = parse_dams_output(get_dams_output(test_addr))
         expected = str(7)
