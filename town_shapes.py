@@ -214,6 +214,7 @@ def visualize_map(
         sf = shp.Reader(
             constants.file_paths["SHAPE_SHP"],
             encoding="shift_jis")
+        print("Successfully loaded the shapefile.")
     except Exception as e:
         print("ERROR: Shape file doesn't exist:", type(e).__name__)
         sys.exit(1)
@@ -228,10 +229,17 @@ def visualize_map(
                   index=True,
                   header=True)
 
-    # Extract the rows of towns in Sendai city
-    df = trim_shape_df(df)
+        df_wo_points = df.drop(columns=["POINTS"])
 
-    plot_map_df(df, show_town_label)
+        df_wo_points.to_csv(constants.file_paths["SHAPE_WO_POINTS_CSV"],
+                  mode="w",
+                  index=True,
+                  header=True)
+    else:
+        # Extract the rows of towns in Sendai city
+        df = trim_shape_df(df)
+
+        plot_map_df(df, show_town_label)
 
 
 if __name__ == "__main__":

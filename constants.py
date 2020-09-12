@@ -28,6 +28,7 @@ file_paths = {
     "AGEGROUP_POS_JSON": os.path.join(
         ".", "results", "agegroups_positions.json"),
     "SHAPE_CSV": os.path.join(".", "results", "shapes.csv"),
+    "SHAPE_WO_POINTS_CSV": os.path.join(".", "results", "shapes_wo_points.csv"),
     "AGEING_HIST_PNG": os.path.join(".", "img", "ageing_hist.png"),
 }
 
